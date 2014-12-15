@@ -1,0 +1,11 @@
+ros-indigo-socketcan-interface (0.6.1-0saucy) saucy; urgency=high
+
+  * remove ipa_* and IPA_* prefixes
+  * fixed catkin_lint errors
+  * added descriptions and authors
+  * renamed ipa_can_interface to socketcaninterface
+  * Contributors: Florian Weisshardt, Mathias Lüdtke
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Sun, 14 Dec 2014 23:00:00 -0000
+
+
