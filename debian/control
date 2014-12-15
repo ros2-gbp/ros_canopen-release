@@ -1,0 +1,12 @@
+Source: ros-indigo-canopen-test-utils
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-canopen-402, ros-indigo-canopen-master, ros-indigo-catkin, ros-indigo-roslaunch
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-indigo-canopen-test-utils
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-indigo-canopen-402, ros-indigo-canopen-master, ros-indigo-canopen-motor-node, ros-indigo-controller-manager, ros-indigo-gazebo-ros, ros-indigo-robot-state-publisher, ros-indigo-roslaunch
+Description: Various helper scripts and test setups for testing and maintaining CANopen chains.

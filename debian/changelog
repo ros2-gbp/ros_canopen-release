@@ -1,0 +1,11 @@
+ros-indigo-canopen-test-utils (0.6.1-0trusty) trusty; urgency=high
+
+  * rename node
+  * remove ipa_* and IPA_* prefixes
+  * added descriptions and authors
+  * renamed ipa_canopen_test to canopen_test_utils
+  * Contributors: Florian Weisshardt, Mathias Lüdtke
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Sun, 14 Dec 2014 23:00:00 -0000
+
+
