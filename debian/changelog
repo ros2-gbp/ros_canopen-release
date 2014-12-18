@@ -1,0 +1,16 @@
+ros-indigo-canopen-chain-node (0.6.2-0trusty) trusty; urgency=high
+
+
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Wed, 17 Dec 2014 23:00:00 -0000
+
+ros-indigo-canopen-chain-node (0.6.1-0trusty) trusty; urgency=high
+
+  * remove ipa_* and IPA_* prefixes
+  * added descriptions and authors
+  * renamed ipa_canopen_chain_ros to canopen_chain_node
+  * Contributors: Florian Weisshardt, Mathias Lüdtke
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Sun, 14 Dec 2014 23:00:00 -0000
+
+
