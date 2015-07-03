@@ -127,13 +127,14 @@ void PDOMapper::PDO::parse_and_set_mapping(const boost::shared_ptr<ObjectStorage
                 ObjectStorage::ReadDelegate rd;
                 ObjectStorage::WriteDelegate wd;
                 if(read) rd = ObjectStorage::ReadDelegate(b.get(), &Buffer::read);
-                if(write) wd = ObjectStorage::WriteDelegate(b.get(), &Buffer::write);
+                if(read || write) wd = ObjectStorage::WriteDelegate(b.get(), &Buffer::write); // set writer for buffer setup or as write delegate
                 size_t l = storage->map(param.index, param.sub_index, rd, wd);
                 assert(l  == param.length/8);
             }
             
             frame.dlc += b->size;
             assert( frame.dlc <= 8 );
+            b->clean();
             buffers.push_back(b);
         }
     }
@@ -164,28 +165,40 @@ PDOMapper::PDOMapper(const boost::shared_ptr<can::CommInterface> interface)
 :interface_(interface)
 {
 }
-void PDOMapper::init(const boost::shared_ptr<ObjectStorage> storage){
+bool PDOMapper::init(const boost::shared_ptr<ObjectStorage> storage, LayerStatus &status){
     boost::mutex::scoped_lock lock(mutex_);
 
-    rpdos_.clear();
-    
-    const canopen::ObjectDict & dict = *storage->dict_;
-    for(uint8_t i=0; i < dict.device_info.nr_of_tx_pdo;++i){ // TPDOs of device
-        boost::shared_ptr<RPDO> rpdo = RPDO::create(interface_,storage, TPDO_COM_BASE + i, TPDO_MAP_BASE + i);
-        if(rpdo){
-            rpdos_.insert(rpdo);
+    try{
+        rpdos_.clear();
+
+        const canopen::ObjectDict & dict = *storage->dict_;
+        for(uint16_t i=0; i < 512 && rpdos_.size() < dict.device_info.nr_of_tx_pdo;++i){ // TPDOs of device
+            if(!dict.has(TPDO_COM_BASE + i,0) && !dict.has(TPDO_MAP_BASE + i,0)) continue;
+
+            boost::shared_ptr<RPDO> rpdo = RPDO::create(interface_,storage, TPDO_COM_BASE + i, TPDO_MAP_BASE + i);
+            if(rpdo){
+                rpdos_.insert(rpdo);
+            }
         }
-    }
-    LOG("RPDOs: " << rpdos_.size());
-    
-    tpdos_.clear();
-    for(uint8_t i=0; i < dict.device_info.nr_of_rx_pdo;++i){ // RPDOs of device
-        boost::shared_ptr<TPDO> tpdo = TPDO::create(interface_,storage, RPDO_COM_BASE + i, RPDO_MAP_BASE + i);
-        if(tpdo){
-            tpdos_.insert(tpdo);
+        // LOG("RPDOs: " << rpdos_.size());
+
+        tpdos_.clear();
+        for(uint16_t i=0; i < 512 && tpdos_.size() <  dict.device_info.nr_of_rx_pdo;++i){ // RPDOs of device
+            if(!dict.has(RPDO_COM_BASE + i,0) && !dict.has(RPDO_MAP_BASE + i,0)) continue;
+
+            boost::shared_ptr<TPDO> tpdo = TPDO::create(interface_,storage, RPDO_COM_BASE + i, RPDO_MAP_BASE + i);
+            if(tpdo){
+                tpdos_.insert(tpdo);
+            }
         }
+        // LOG("TPDOs: " << tpdos_.size());
+
+        return true;
     }
-    LOG("TPDOs: " << tpdos_.size());
+    catch(const std::out_of_range &e){
+        status.error(std::string("PDO error: ") + e.what());
+        return false;
+    }
 }
 
 
@@ -227,9 +240,9 @@ bool PDOMapper::TPDO::init(const boost::shared_ptr<ObjectStorage> &storage, cons
     ObjectStorage::Entry<uint8_t> tt;
     storage->entry(tt, com_index, SUB_COM_TRANSMISSION_TYPE);
     transmission_type = tt.desc().value().get<uint8_t>();
-    
-    if(transmission_type > 1 && transmission_type <=240){
-        tt.set(1);
+
+    if(transmission_type != 1 && transmission_type <=240){
+        tt.set(1); // enforce 1 for compatibility
     }
     return true;
 }
@@ -261,13 +274,13 @@ void PDOMapper::TPDO::sync(){
     }
 }
 
-void PDOMapper::RPDO::sync(){
+void PDOMapper::RPDO::sync(LayerStatus &status){
     boost::mutex::scoped_lock lock(mutex);
     if((transmission_type >= 1 && transmission_type <= 240) || transmission_type == 0xFC){ // cyclic
         if(timeout > 0){
             --timeout;
         }else if(timeout == 0) {
-            BOOST_THROW_EXCEPTION( TimeoutException() );
+            status.warn("RPDO timeout");
         }
     }
     if(transmission_type == 0xFC || transmission_type == 0xFD){
@@ -305,12 +318,11 @@ void PDOMapper::RPDO::handleFrame(const can::Frame & msg){
     }
 }
 
-bool PDOMapper::read(){
+void PDOMapper::read(LayerStatus &status){
     boost::mutex::scoped_lock lock(mutex_);
     for(boost::unordered_set<boost::shared_ptr<RPDO> >::iterator it = rpdos_.begin(); it != rpdos_.end(); ++it){
-        (*it)->sync();
+        (*it)->sync(status);
     }
-    return true; // TODO: check for errors
 }
 bool PDOMapper::write(){
     boost::mutex::scoped_lock lock(mutex_);
@@ -352,7 +364,7 @@ void PDOMapper::Buffer::read(const canopen::ObjectDict::Entry &entry, String &da
     while(empty){
         if(cond.wait_until(lock,abs_time)  == boost::cv_status::timeout)
         {
-            BOOST_THROW_EXCEPTION( TimeoutException() );
+            BOOST_THROW_EXCEPTION( TimeoutException("PDO read: " + std::string(ObjectDict::Key(entry))));
         }
     }
     if(dirty){
