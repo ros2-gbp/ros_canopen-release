@@ -68,10 +68,12 @@ public:
         } else if(!driver_->init(device_, loopback_)) {
             status.error("CAN init failed");
         } else {
+            can::StateWaiter waiter(driver_.get());
+
             thread_.reset(new boost::thread(&can::DriverInterface::run, driver_));
             error_listener_ = driver_->createMsgListener(can::ErrorHeader(), can::CommInterface::FrameDelegate(this, &CANLayer::handleFrame));
 	    
-	    if(!can::StateWaiter::wait_for(can::State::ready, driver_.get(), boost::posix_time::seconds(1))){
+	    if(!waiter.wait(can::State::ready, boost::posix_time::seconds(1))){
 		status.error("CAN init timed out");
 	    }
         }
@@ -80,8 +82,12 @@ public:
 	}
     }
     virtual void handleShutdown(LayerStatus &status){
+        can::StateWaiter waiter(driver_.get());
         error_listener_.reset();
         driver_->shutdown();
+        if(!waiter.wait(can::State::closed, boost::posix_time::seconds(1))){
+             status.warn("CAN shutdown timed out");
+        }
         if(thread_){
             thread_->interrupt();
             thread_->join();
@@ -92,7 +98,10 @@ public:
     virtual void handleHalt(LayerStatus &status) { /* nothing to do */ }
     
     virtual void handleRecover(LayerStatus &status){
-        if(!driver_->recover()) status.error("driver recover failed"); // TODO: implement logging for driver
+        if(!driver_->getState().isReady()){
+            handleShutdown(status);
+            handleInit(status);
+        }
     }
 
 };
