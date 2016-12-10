@@ -8,7 +8,7 @@
 #include <joint_limits_interface/joint_limits_interface.h>
 #include <urdf/model.h>
 #include <canopen_402/base.h>
-
+#include <filters/filter_chain.h>
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -125,6 +125,9 @@ class HandleLayer: public canopen::Layer{
     boost::scoped_ptr<UnitConverter>  conv_target_pos_, conv_target_vel_, conv_target_eff_;
     boost::scoped_ptr<UnitConverter>  conv_pos_, conv_vel_, conv_eff_;
 
+    filters::FilterChain<double> filter_pos_, filter_vel_, filter_eff_;
+    XmlRpc::XmlRpcValue options_;
+
     hardware_interface::JointStateHandle jsh_;
     hardware_interface::JointHandle jph_, jvh_, jeh_;
     boost::atomic<hardware_interface::JointHandle*> jh_;
@@ -174,6 +177,8 @@ public:
     hardware_interface::JointHandle* registerHandle(hardware_interface::VelocityJointInterface &iface);
     hardware_interface::JointHandle* registerHandle(hardware_interface::EffortJointInterface &iface);
 
+    bool prepareFilters(canopen::LayerStatus &status);
+
 private:
     virtual void handleRead(canopen::LayerStatus &status, const LayerState &current_state);
     virtual void handleWrite(canopen::LayerStatus &status, const LayerState &current_state);
@@ -219,12 +224,6 @@ public:
 
     virtual void handleInit(canopen::LayerStatus &status);
     void enforce(const ros::Duration &period, bool reset);
-    virtual bool canSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list) const{
-        // compile-time check for mode switching support in ros_control
-        // if the following line fails, please upgrade to ros_control/contoller_manager 0.9.2 or newer
-        (void) &hardware_interface::RobotHW::canSwitch;
-        return const_cast<RobotLayer*>(this)->prepareSwitch(start_list, stop_list); // awful hack, do not try this at home.
-    }
     virtual bool prepareSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list);
     virtual void doSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list);
 };
@@ -237,10 +236,11 @@ class ControllerManagerLayer : public canopen::Layer {
 
     canopen::time_point last_time_;
     boost::atomic<bool> recover_;
+    const ros::Duration fixed_period_;
 
 public:
-    ControllerManagerLayer(const boost::shared_ptr<RobotLayer> robot, const ros::NodeHandle &nh)
-    :Layer("ControllerManager"), robot_(robot), nh_(nh) {
+    ControllerManagerLayer(const boost::shared_ptr<RobotLayer> robot, const ros::NodeHandle &nh, const ros::Duration &fixed_period)
+    :Layer("ControllerManager"), robot_(robot), nh_(nh), fixed_period_(fixed_period) {
     }
 
     virtual void handleRead(canopen::LayerStatus &status, const LayerState &current_state);
