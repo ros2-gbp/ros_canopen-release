@@ -57,13 +57,11 @@ void ObjectStorage::Data::init(){
 void ObjectStorage::Data::force_write(){
     boost::mutex::scoped_lock lock(mutex);
     
-    if(entry->writable){
-        if(!valid && entry->readable){
-            read_delegate(*entry, buffer);
-            valid = true;
-        }
-        if(valid) write_delegate(*entry, buffer);
+    if(!valid && entry->readable){
+        read_delegate(*entry, buffer);
+        valid = true;
     }
+    if(valid) write_delegate(*entry, buffer);
 }
 
 void ObjectStorage::Data::reset(){
@@ -104,7 +102,7 @@ void set_access( ObjectDict::Entry &entry, const std::string &access){
         entry.writable = false;
         entry.constant = true;
     }else{
-        throw ParseException();
+        throw ParseException("Cannot determine access for" + std::string(ObjectDict::Key(entry)));
     }
 }
 
@@ -139,10 +137,10 @@ template<> uint64_t int_from_string(const std::string &s){
 template<typename T> HoldAny parse_int(boost::property_tree::iptree &pt, const std::string &key){
     if(pt.count(key) == 0) return HoldAny(TypeGuard::create<T>());
                                           
-    std::string str = pt.get<std::string>(key);
+    std::string str = boost::trim_copy(pt.get<std::string>(key));
     if(boost::istarts_with(str,"$NODEID")){
         return HoldAny(NodeIdOffset<T>(int_from_string<T>(boost::trim_copy(str.substr(str.find("+",7)+1)))));
-    }else return HoldAny(int_from_string<T>(boost::trim_copy(str)));
+    }else return HoldAny(int_from_string<T>(str));
 }
 
 template<typename T> HoldAny parse_octets(boost::property_tree::iptree &pt, const std::string &key){
@@ -202,8 +200,12 @@ template<typename T> T read_integer(boost::property_tree::iptree &pt, const std:
 void read_var(ObjectDict::Entry &entry, boost::property_tree::iptree &object){
         read_integer<uint16_t>(entry.data_type, object, "DataType");
         entry.mappable = object.get<bool>("PDOMapping", false);
-        set_access(entry, object.get<std::string>("AccessType"));
-        
+        try{
+            set_access(entry, object.get<std::string>("AccessType"));
+        }
+        catch(...){
+            throw ParseException("object " + entry.desc + " has no AccessType") ;
+        }
         entry.def_val = ReadAnyValue::read_value(object, entry.data_type, "DefaultValue");
         entry.init_val = ReadAnyValue::read_value(object, entry.data_type, "ParameterValue");
 }
@@ -218,7 +220,7 @@ void parse_object(boost::shared_ptr<ObjectDict> dict, boost::property_tree::iptr
         entry->desc = object->get<std::string>("Denotation",object->get<std::string>("ParameterName"));
         
         // std::cout << name << ": "<< entry->desc << std::endl;
-        if(entry->obj_code == ObjectDict::VAR || entry->obj_code == ObjectDict::DOMAIN_DATA){
+        if(entry->obj_code == ObjectDict::VAR || entry->obj_code == ObjectDict::DOMAIN_DATA || sub_index){
             entry->sub_index = sub_index? *sub_index: 0;
             read_var(*entry, *object);
             dict->insert(sub_index != 0, entry);
@@ -246,7 +248,7 @@ void parse_object(boost::shared_ptr<ObjectDict> dict, boost::property_tree::iptr
                 }
             }
         }else{
-            throw ParseException();
+            throw ParseException("ObjectType of " + entry->desc + " not supported") ;
         }
 }
 void parse_objects(boost::shared_ptr<ObjectDict> dict, boost::property_tree::iptree &pt, const std::string &key){
@@ -337,12 +339,17 @@ size_t ObjectStorage::map(const boost::shared_ptr<const ObjectDict::Entry> &e, c
         it->second->reset();
 
     }
-    it->second->set_delegates(read_delegate ?read_delegate: read_delegate_, write_delegate ? write_delegate : write_delegate_);
-    if(write_delegate) it->second->force_write(); // update buffer
-    if(read_delegate){ // special case, reset write delegate
+
+    if(read_delegate && write_delegate){
+        it->second->set_delegates(read_delegate_, write_delegate);
+        it->second->force_write(); // update buffer
+        it->second->set_delegates(read_delegate, write_delegate_);
+    }else if(write_delegate) {
+        it->second->set_delegates(read_delegate_, write_delegate);
+        it->second->force_write(); // update buffer
+    }else if(read_delegate){
         it->second->set_delegates(read_delegate, write_delegate_);
     }
-
     return it->second->size();
 }
 
