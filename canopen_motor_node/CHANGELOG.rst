@@ -2,6 +2,33 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.5 (2016-12-10)
+------------------
+* exit code for generic error should be 1, not -1
+* styled and sorted CMakeLists.txt
+  * removed boilerplate comments
+  * indention
+  * reviewed exported dependencies
+* styled and sorted package.xml
+* update package URLs
+* foward commands ony if enabled in doSwitch
+* moved switch implemenation to non-RT prepareSwitch
+* migrated to non-const prepareSwitch
+* Splitted control_node.cpp into control_node.cpp, robot_layer.cpp and robot_layer.h
+* renamed chain_ros.h to ros_chain.h, fixes `#126 <https://github.com/ipa-mdl/ros_canopen/issues/126>`_
+* added strictness to service call, extend error message for doSwitch fails
+* stop controllers that failed switching via service call
+* stop all cotnroller joints if one failed to switch
+* check for ready state before controller/mode switching
+* improved init bevaviour:
+  * URDF is not read again (was not needed anyway=
+  * register interfaces only of first init
+* remove unnecessary atomic reads
+* halt motor if switch failed
+* Fix for switching controllers with same mode
+* More expressive comments for compile-time check
+* Contributors: Mathias Lüdtke, Michael Stoll
+
 0.6.4 (2015-07-03)
 ------------------
 
