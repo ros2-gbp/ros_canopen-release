@@ -1,6 +1,6 @@
 #include <socketcan_interface/dispatcher.h>
 #include <socketcan_interface/socketcan.h>
-#include <canopen_chain_node/chain_ros.h>
+#include <canopen_chain_node/ros_chain.h>
 
 using namespace can;
 using namespace canopen;
@@ -13,7 +13,7 @@ int main(int argc, char** argv){
   RosChain chain(nh, nh_priv);
   
   if(!chain.setup()){
-      return -1;
+      return 1;
   }
   
   ros::spin();

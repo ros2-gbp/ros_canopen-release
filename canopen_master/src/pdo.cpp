@@ -100,7 +100,7 @@ void PDOMapper::PDO::parse_and_set_mapping(const boost::shared_ptr<ObjectStorage
     storage->entry(cob_id, com_index, SUB_COM_COB_ID);
     
     bool com_changed = check_com_changed(dict, map_index);
-    if(map_changed || com_changed){
+    if((map_changed || com_changed) && cob_id.desc().writable){
         
         PDOid cur(cob_id.get());
         cur.invalid = 1;
@@ -153,7 +153,7 @@ void PDOMapper::PDO::parse_and_set_mapping(const boost::shared_ptr<ObjectStorage
     if(map_changed){
         num_entry.set(map_num);
     }
-    if(com_changed || map_changed){
+    if((com_changed || map_changed) && cob_id.desc().writable){
         storage->init(ObjectDict::Key(com_index, SUB_COM_COB_ID));
         
         cob_id.set(NodeIdOffset<uint32_t>::apply(dict(com_index, SUB_COM_COB_ID).value(), storage->node_id_));
@@ -352,8 +352,6 @@ void PDOMapper::Buffer::write(const uint8_t* b, const size_t len){
     empty = false;
     dirty = true;
     memcpy(&buffer[0], b, size);
-    lock.unlock();
-    cond.notify_all();
 }
 void PDOMapper::Buffer::read(const canopen::ObjectDict::Entry &entry, String &data){
     boost::mutex::scoped_lock lock(mutex);
@@ -361,11 +359,8 @@ void PDOMapper::Buffer::read(const canopen::ObjectDict::Entry &entry, String &da
     if(size != data.size()){
         BOOST_THROW_EXCEPTION( std::bad_cast() );
     }
-    while(empty){
-        if(cond.wait_until(lock,abs_time)  == boost::cv_status::timeout)
-        {
-            BOOST_THROW_EXCEPTION( TimeoutException("PDO read: " + std::string(ObjectDict::Key(entry))));
-        }
+    if(empty){
+        BOOST_THROW_EXCEPTION( TimeoutException("PDO data empty: " + std::string(ObjectDict::Key(entry))));
     }
     if(dirty){
         data.assign(buffer.begin(), buffer.end());
