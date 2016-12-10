@@ -4,6 +4,18 @@ Changelog for package canopen_motor_node
 
 0.6.5 (2016-12-10)
 ------------------
+* protect MotorChain setup with RosChain lock
+* Merge pull request `#153 <https://github.com/ipa-mdl/ros_canopen/issues/153>`_ from ipa-mdl/deprecated-canswitch
+  deprecated canSwitch
+* fix for issue `#171 <https://github.com/ipa-mdl/ros_canopen/issues/171>`_
+* Merge pull request `#168 <https://github.com/ipa-mdl/ros_canopen/issues/168>`_ from ipa-mdl/state-filters
+  added filter chain for state values
+* do not start driver if filter config fails
+* added filter chain for state values
+* log control period settings
+* use update_period\_ for controll unless use_realtime_period is set true
+* better initialize last_time\_
+* removed canSwitch implementation, added compile-time check for prepareSwitch
 * exit code for generic error should be 1, not -1
 * styled and sorted CMakeLists.txt
   * removed boilerplate comments
