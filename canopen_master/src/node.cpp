@@ -88,34 +88,36 @@ bool Node::stop(){
         // ERROR
     }
     interface_->send(NMTcommand::Frame(node_id_, NMTcommand::Stop));
-    return 0 != wait_for(Stopped, boost::chrono::seconds(2));
+    return true;
 }
 
 void Node::switchState(const uint8_t &s){
+    bool changed = state_ != s;
     switch(s){
         case Operational:
-            if(sync_) sync_->addNode(this);
+            if(changed && sync_) sync_->addNode(this);
             break;
         case BootUp:
         case PreOperational:
         case Stopped:
-            if(sync_) sync_->removeNode(this);
+            if(changed && sync_) sync_->removeNode(this);
             break;
         default:
             //error
             ;
     }
-    state_ = (State) s;
-    state_dispatcher_.dispatch(state_);
+    if(changed){
+        state_ = (State) s;
+        state_dispatcher_.dispatch(state_);
+        cond.notify_one();
+    }
 }
 void Node::handleNMT(const can::Frame & msg){
     boost::mutex::scoped_lock cond_lock(cond_mutex);
-    heartbeat_timeout_ = boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(3*heartbeat_.get_cached());
+    uint16_t interval = getHeartbeatInterval();
+    if(interval) heartbeat_timeout_ = get_abs_time(boost::chrono::milliseconds(3*interval));
     assert(msg.dlc == 1);
     switchState(msg.data[0]);
-    cond_lock.unlock();
-    cond.notify_one();
-    
 }
 template<typename T> int Node::wait_for(const State &s, const T &timeout){
     boost::mutex::scoped_lock cond_lock(cond_mutex);
@@ -137,7 +139,7 @@ template<typename T> int Node::wait_for(const State &s, const T &timeout){
     return 1;
 }
 bool Node::checkHeartbeat(){
-    if(!heartbeat_.get_cached()) return true; //disabled
+    if(getHeartbeatInterval() == 0) return true; //disabled
     boost::mutex::scoped_lock cond_lock(cond_mutex);
     return heartbeat_timeout_ >= boost::chrono::high_resolution_clock::now();
 }
@@ -212,8 +214,8 @@ void Node::handleRecover(LayerStatus &status){
     }
 }
 void Node::handleShutdown(LayerStatus &status){
-    stop();
     if(getHeartbeatInterval()> 0) heartbeat_.set(0);
+    stop();
     nmt_listener_.reset();
     switchState(Unknown);
 }
