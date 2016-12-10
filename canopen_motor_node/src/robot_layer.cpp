@@ -53,7 +53,9 @@ bool HandleLayer::select(const MotorBase::OperationMode &m){
 }
 
 HandleLayer::HandleLayer(const std::string &name, const boost::shared_ptr<MotorBase> & motor, const boost::shared_ptr<ObjectStorage> storage,  XmlRpc::XmlRpcValue & options)
-: Layer(name + " Handle"), motor_(motor), variables_(storage), jsh_(name, &pos_, &vel_, &eff_), jph_(jsh_, &cmd_pos_), jvh_(jsh_, &cmd_vel_), jeh_(jsh_, &cmd_eff_), jh_(0), forward_command_(false) {
+: Layer(name + " Handle"), motor_(motor), variables_(storage), jsh_(name, &pos_, &vel_, &eff_), jph_(jsh_, &cmd_pos_), jvh_(jsh_, &cmd_vel_), jeh_(jsh_, &cmd_eff_), jh_(0), forward_command_(false),
+  filter_pos_("double"), filter_vel_("double"), filter_eff_("double"), options_(options)
+{
    commands_[MotorBase::No_Mode] = 0;
 
    std::string p2d("rint(rad2deg(pos)*1000)"), v2d("rint(rad2deg(vel)*1000)"), e2d("rint(eff)");
@@ -144,9 +146,9 @@ hardware_interface::JointHandle* HandleLayer::registerHandle(hardware_interface:
 void HandleLayer::handleRead(LayerStatus &status, const LayerState &current_state) {
     if(current_state > Shutdown){
         variables_.sync();
-        pos_ = conv_pos_->evaluate();
-        vel_ = conv_vel_->evaluate();
-        eff_ = conv_eff_->evaluate();
+        filter_pos_.update(conv_pos_->evaluate(), pos_);
+        filter_vel_.update(conv_vel_->evaluate(), vel_);
+        filter_eff_.update(conv_eff_->evaluate(), eff_);
     }
 }
 void HandleLayer::handleWrite(LayerStatus &status, const LayerState &current_state) {
@@ -174,6 +176,25 @@ void HandleLayer::handleWrite(LayerStatus &status, const LayerState &current_sta
         }
     }
 }
+
+bool prepareFilter(const std::string& joint_name, const std::string& filter_name,  filters::FilterChain<double> &filter, XmlRpc::XmlRpcValue & options, canopen::LayerStatus &status){
+    filter.clear();
+    if(options.hasMember(filter_name)){
+        if(!filter.configure(options[filter_name],joint_name + "/" + filter_name)){
+            status.error("could not configure " + filter_name+ " for " + joint_name);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool HandleLayer::prepareFilters(canopen::LayerStatus &status){
+    return prepareFilter(jsh_.getName(), "position_filters", filter_pos_, options_, status) &&
+       prepareFilter(jsh_.getName(), "velocity_filters", filter_vel_, options_, status) &&
+       prepareFilter(jsh_.getName(), "effort_filters", filter_eff_, options_, status);
+}
+
 void HandleLayer::handleInit(LayerStatus &status){
     // TODO: implement proper init
     conv_pos_->reset();
@@ -182,7 +203,12 @@ void HandleLayer::handleInit(LayerStatus &status){
     conv_target_pos_->reset();
     conv_target_vel_->reset();
     conv_target_eff_->reset();
-    handleRead(status, Layer::Ready);
+
+
+    if(prepareFilters(status))
+    {
+        handleRead(status, Layer::Ready);
+    }
 }
 
 
@@ -293,6 +319,9 @@ void RobotLayer::enforce(const ros::Duration &period, bool reset){
 }
 
 bool RobotLayer::prepareSwitch(const std::list<hardware_interface::ControllerInfo> &start_list, const std::list<hardware_interface::ControllerInfo> &stop_list) {
+    // compile-time check for mode switching support in ros_control
+    (void) &hardware_interface::RobotHW::prepareSwitch; // please upgrade to ros_control/contoller_manager 0.9.4 or newer
+
     // stop handles
     for (std::list<hardware_interface::ControllerInfo>::const_iterator controller_it = stop_list.begin(); controller_it != stop_list.end(); ++controller_it){
 
@@ -413,7 +442,12 @@ void ControllerManagerLayer::handleWrite(canopen::LayerStatus &status, const Lay
             canopen::time_point abs_now = canopen::get_abs_time();
             ros::Time now = ros::Time::now();
 
-            ros::Duration period(boost::chrono::duration<double>(abs_now -last_time_).count());
+            ros::Duration period = fixed_period_;
+
+            if(period.isZero()) {
+                period.fromSec(boost::chrono::duration<double>(abs_now -last_time_).count());
+            }
+
             last_time_ = abs_now;
 
             bool recover = recover_.exchange(false);
@@ -428,6 +462,7 @@ void ControllerManagerLayer::handleInit(canopen::LayerStatus &status) {
         status.warn("controller_manager is already intialized");
     }else{
         recover_ = true;
+        last_time_ = canopen::get_abs_time();
         cm_.reset(new controller_manager::ControllerManager(robot_.get(), nh_));
     }
 }
