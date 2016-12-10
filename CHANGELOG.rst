@@ -4,6 +4,8 @@ Changelog for package canopen_chain_node
 
 0.6.5 (2016-12-10)
 ------------------
+* protect MotorChain setup with RosChain lock
+* added include to <boost/scoped_ptr.hpp>; solving `#177 <https://github.com/ipa-mdl/ros_canopen/issues/177>`_
 * default to canopen::SimpleMaster::Allocator (`#71 <https://github.com/ipa-mdl/ros_canopen/issues/71>`_)
 * exit code for generic error should be 1, not -1
 * styled and sorted CMakeLists.txt
@@ -27,7 +29,7 @@ Changelog for package canopen_chain_node
 * call to detroy is not needed anymore
 * added GuardedClassLoader implementation
 * minor shutdown improvements
-* Contributors: Mathias Lüdtke, Michael Stoll
+* Contributors: Mathias Lüdtke, Michael Stoll, xaedes
 
 0.6.4 (2015-07-03)
 ------------------
