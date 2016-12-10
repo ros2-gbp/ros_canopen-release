@@ -1,4 +1,5 @@
 #include <canopen_402/motor.h>
+#include <boost/thread/reverse_lock.hpp>
 
 namespace canopen
 {
@@ -68,12 +69,12 @@ State402::InternalState State402::read(uint16_t sw) {
     }
     return state_;
 }
-bool State402::waitForNewState(const time_point &abstime, State402::InternalState &new_state, const State402::InternalState &test_state){
+bool State402::waitForNewState(const time_point &abstime, State402::InternalState &state){
     boost::mutex::scoped_lock lock(mutex_);
-    InternalState oldstate = state_;
-    while(state_ == oldstate && state_ != test_state && cond_.wait_until(lock, abstime) == boost::cv_status::no_timeout) {}
-    new_state = state_;
-    return oldstate != state_ || state_ == test_state;
+    while(state_ == state && cond_.wait_until(lock, abstime) == boost::cv_status::no_timeout) {}
+    bool res = state != state_;
+    state = state_;
+    return res;
 }
 
 const Command402::TransitionTable Command402::transitions_;
@@ -250,7 +251,8 @@ bool Motor402::setTarget(double val){
 bool Motor402::isModeSupported(uint16_t mode) { return mode != MotorBase::Homing && allocMode(mode); }
 
 bool Motor402::enterModeAndWait(uint16_t mode) {
-    LayerStatus s; bool okay = mode != MotorBase::Homing && switchMode(s, mode);
+    LayerStatus s;
+    bool okay = mode != MotorBase::Homing && switchMode(s, mode);
     if(!s.bounded<LayerStatus::Ok>()){
         LOG("Could not switch to mode " << mode << ", reason: " << s.reason());
     }
@@ -325,7 +327,15 @@ bool Motor402::switchMode(LayerStatus &status, uint16_t mode) {
         boost::mutex::scoped_lock lock(mode_mutex_);
 
         time_point abstime = get_abs_time(boost::chrono::seconds(5));
-        while(mode_id_ != mode && mode_cond_.wait_until(lock, abstime) == boost::cv_status::no_timeout) {}
+        if(monitor_mode_){
+            while(mode_id_ != mode && mode_cond_.wait_until(lock, abstime) == boost::cv_status::no_timeout) {}
+        }else{
+            while(mode_id_ != mode && get_abs_time() < abstime){
+                boost::reverse_lock<boost::mutex::scoped_lock> reverse(lock); // unlock inside loop
+                op_mode_display_.get(); // poll
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(20)); // wait some time
+            }
+        }
 
         if(mode_id_ == mode){
             selected_mode_ = next_mode;
@@ -348,13 +358,13 @@ bool Motor402::switchState(LayerStatus &status, const State402::InternalState &t
     target_state_ = target;
     while(state != target_state_){
         boost::mutex::scoped_lock lock(cw_mutex_);
-        State402::InternalState next = target_state_;
-        if(!Command402::setTransition(control_word_ ,state, next , &next)){
+        State402::InternalState next = State402::Unknown;
+        if(!Command402::setTransition(control_word_ ,state, target_state_ , &next)){
             status.error("Could not set transition");
             return false;
         }
         lock.unlock();
-        if(!state_handler_.waitForNewState(abstime, state, next)){
+        if(state != next && !state_handler_.waitForNewState(abstime, state)){
             status.error("Transition timeout");
             return false;
         }
@@ -368,7 +378,7 @@ bool Motor402::readState(LayerStatus &status){
     State402::InternalState state = state_handler_.read(sw);
 
     boost::mutex::scoped_lock lock(mode_mutex_);
-    uint16_t new_mode = op_mode_display_.get();
+    uint16_t new_mode = monitor_mode_ ? op_mode_display_.get() : op_mode_display_.get_cached();
     if(selected_mode_ && selected_mode_->mode_id_ == new_mode){
         if(!selected_mode_->read(sw)){
             status.error("Mode handler has error");
@@ -395,6 +405,7 @@ void Motor402::handleRead(LayerStatus &status, const LayerState &current_state){
 void Motor402::handleWrite(LayerStatus &status, const LayerState &current_state){
     if(current_state > Off){
         boost::mutex::scoped_lock lock(cw_mutex_);
+        control_word_ |= (1<<Command402::CW_Halt);
         if(state_handler_.getState() == State402::Operation_Enable){
             boost::mutex::scoped_lock lock(mode_mutex_);
             Mode::OpModeAccesser cwa(control_word_);
@@ -406,11 +417,13 @@ void Motor402::handleWrite(LayerStatus &status, const LayerState &current_state)
             }
             if(okay) {
                 control_word_ &= ~(1<<Command402::CW_Halt);
-            }else{
-                control_word_ |= (1<<Command402::CW_Halt);
             }
         }
-        control_word_entry_.set(control_word_);
+        if(start_fault_reset_.exchange(false)){
+            control_word_entry_.set_cached(control_word_ & ~(1<<Command402::CW_Fault_Reset));
+        }else{
+            control_word_entry_.set_cached(control_word_);
+        }
     }
 }
 void Motor402::handleDiag(LayerReport &report){
@@ -454,6 +467,11 @@ void Motor402::handleInit(LayerStatus &status){
     if(!readState(status)){
         status.error("Could not read motor state");
         return;
+    }
+    {
+        boost::mutex::scoped_lock lock(cw_mutex_);
+        control_word_ = 0;
+        start_fault_reset_ = true;
     }
     if(!switchState(status, State402::Operation_Enable)){
         status.error("Could not enable motor");
@@ -501,6 +519,7 @@ void Motor402::handleHalt(LayerStatus &status){
     }
 }
 void Motor402::handleRecover(LayerStatus &status){
+    start_fault_reset_ = true;
     {
         boost::mutex::scoped_lock lock(mode_mutex_);
         if(selected_mode_ && !selected_mode_->start()){
