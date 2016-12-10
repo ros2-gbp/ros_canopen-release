@@ -4,6 +4,14 @@ Changelog for package canopen_master
 
 0.6.5 (2016-12-10)
 ------------------
+* Merge pull request `#179 <https://github.com/ipa-mdl/ros_canopen/issues/179>`_ from ipa-mdl/mixed_case_access
+  support mixed-case access strings in EDS
+* decouple listener initialization from 1003 binding
+* introduced THROW_WITH_KEY and ObjectDict::key_info
+* added access type tests
+* convert access string to lowercase
+* Do not remove shared memory automatically
+* hardened code with the help of cppcheck
 * throw verbose exception if AccessType is missing (`#64 <https://github.com/ipa-mdl/ros_canopen/issues/64>`_)
 * styled and sorted CMakeLists.txt
   * removed boilerplate comments
