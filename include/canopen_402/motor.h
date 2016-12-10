@@ -6,6 +6,10 @@
 #include <boost/function.hpp>
 #include <boost/container/flat_map.hpp>
 
+#include <boost/numeric/conversion/cast.hpp>
+#include <limits>
+#include <algorithm>
+
 namespace canopen
 {
 
@@ -45,7 +49,7 @@ public:
     };
     InternalState getState();
     InternalState read(uint16_t sw);
-    bool waitForNewState(const time_point &abstime, InternalState &new_state, const State402::InternalState &test_state);
+    bool waitForNewState(const time_point &abstime, InternalState &state);
     State402() : state_(Unknown) {}
 private:
     boost::condition_variable cond_;
@@ -135,33 +139,59 @@ public:
 };
 
 
-class ModeTargetHelper : public Mode {
-    double target_;
+template<typename T> class ModeTargetHelper : public Mode {
+    T target_;
     boost::atomic<bool> has_target_;
+
 public:
     ModeTargetHelper(uint16_t mode) : Mode (mode) {}
     bool hasTarget() { return has_target_; }
-    template <typename T> T getTarget() { return static_cast<T>(target_); }
+    T getTarget() { return target_; }
     virtual bool setTarget(const double &val) {
-        target_ = val;
+        if(isnan(val)){
+            LOG("target command is not a number");
+            return false;
+        }
+
+        using boost::numeric_cast;
+        using boost::numeric::positive_overflow;
+        using boost::numeric::negative_overflow;
+
+        try
+        {
+            target_= numeric_cast<T>(val);
+        }
+        catch(negative_overflow&) {
+            LOG("Command " << val << " does not fit into target, clamping to min limit");
+            target_= std::numeric_limits<T>::min();
+        }
+        catch(positive_overflow&) {
+            LOG("Command " << val << " does not fit into target, clamping to max limit");
+            target_= std::numeric_limits<T>::max();
+        }
+        catch(...){
+            LOG("Was not able to cast command " << val);
+            return false;
+        }
+
         has_target_ = true;
         return true;
     }
     virtual bool start() { has_target_ = false; return true; }
 };
 
-template<uint16_t ID, typename TYPE, uint16_t OBJ, uint8_t SUB, uint16_t CW_MASK> class ModeForwardHelper : public ModeTargetHelper {
+template<uint16_t ID, typename TYPE, uint16_t OBJ, uint8_t SUB, uint16_t CW_MASK> class ModeForwardHelper : public ModeTargetHelper<TYPE> {
     canopen::ObjectStorage::Entry<TYPE> target_entry_;
 public:
-    ModeForwardHelper(boost::shared_ptr<ObjectStorage> storage) : ModeTargetHelper(ID) {
+    ModeForwardHelper(boost::shared_ptr<ObjectStorage> storage) : ModeTargetHelper<TYPE>(ID) {
         if(SUB) storage->entry(target_entry_, OBJ, SUB);
         else storage->entry(target_entry_, OBJ);
     }
     virtual bool read(const uint16_t &sw) { return true;}
-    virtual bool write(OpModeAccesser& cw) {
-        if(hasTarget()){
+    virtual bool write(Mode::OpModeAccesser& cw) {
+        if(this->hasTarget()){
             cw = cw.get() | CW_MASK;
-            target_entry_.set(getTarget<TYPE>());
+            target_entry_.set(this->getTarget());
             return true;
         }else{
             cw = cw.get() & ~CW_MASK;
@@ -178,7 +208,7 @@ typedef ModeForwardHelper<MotorBase::Cyclic_Synchronous_Torque, int16_t, 0x6071,
 typedef ModeForwardHelper<MotorBase::Velocity, int16_t, 0x6042, 0, (1<<Command402::CW_Operation_mode_specific0)|(1<<Command402::CW_Operation_mode_specific1)|(1<<Command402::CW_Operation_mode_specific2)> VelocityMode;
 typedef ModeForwardHelper<MotorBase::Interpolated_Position, int32_t, 0x60C1, 0x01, (1<<Command402::CW_Operation_mode_specific0)> InterpolatedPositionMode;
 
-class ProfiledPositionMode : public ModeTargetHelper {
+class ProfiledPositionMode : public ModeTargetHelper<int32_t> {
     canopen::ObjectStorage::Entry<int32_t> target_position_;
     int32_t last_target_;
     uint16_t sw_;
@@ -201,7 +231,7 @@ public:
     virtual bool write(OpModeAccesser& cw) {
         cw.set(CW_Immediate);
         if(hasTarget()){
-            int32_t target = getTarget<int32_t>();
+            int32_t target = getTarget();
             if((sw_ & MASK_Acknowledged) == 0 && target != last_target_){
                 if(cw.get(CW_NewPoint)){
                     cw.reset(CW_NewPoint); // reset if needed
@@ -263,7 +293,9 @@ class Motor402 : public MotorBase
 public:
 
     Motor402(const std::string &name, boost::shared_ptr<ObjectStorage> storage, const canopen::Settings &settings)
-    : MotorBase(name), status_word_(0),control_word_(0), switching_state_(State402::InternalState(settings.get_optional<unsigned int>("switching_state", static_cast<unsigned int>(State402::Operation_Enable))))
+    : MotorBase(name), status_word_(0),control_word_(0),
+      switching_state_(State402::InternalState(settings.get_optional<unsigned int>("switching_state", static_cast<unsigned int>(State402::Operation_Enable)))),
+      monitor_mode_(settings.get_optional<bool>("monitor_mode", true))
     {
         storage->entry(status_word_entry_, 0x6041);
         storage->entry(control_word_entry_, 0x6040);
@@ -339,6 +371,7 @@ private:
     boost::atomic<uint16_t> status_word_;
     uint16_t control_word_;
     boost::mutex cw_mutex_;
+    boost::atomic<bool> start_fault_reset_;
     boost::atomic<State402::InternalState> target_state_;
 
 
@@ -353,6 +386,7 @@ private:
     boost::condition_variable mode_cond_;
     boost::mutex mode_mutex_;
     const State402::InternalState switching_state_;
+    const bool monitor_mode_;
 
     canopen::ObjectStorage::Entry<uint16_t>  status_word_entry_;
     canopen::ObjectStorage::Entry<uint16_t >  control_word_entry_;
