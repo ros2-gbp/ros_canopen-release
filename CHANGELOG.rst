@@ -4,6 +4,8 @@ Changelog for package canopen_402
 
 0.6.5 (2016-12-10)
 ------------------
+* stop on internal limit only if limit was not reached before
+* hardened code with the help of cppcheck
 * Do not send control if it was not changed
   Otherwise invalid state machine transitions might get commanded
 * styled and sorted CMakeLists.txt
