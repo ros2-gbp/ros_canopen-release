@@ -2,6 +2,9 @@
 Changelog for package canopen_master
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2016-12-13)
+------------------
+
 0.6.5 (2016-12-10)
 ------------------
 * Merge pull request `#179 <https://github.com/ipa-mdl/ros_canopen/issues/179>`_ from ipa-mdl/mixed_case_access

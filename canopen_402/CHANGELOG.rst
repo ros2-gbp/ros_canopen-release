@@ -2,6 +2,9 @@
 Changelog for package canopen_402
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2016-12-13)
+------------------
+
 0.6.5 (2016-12-10)
 ------------------
 * stop on internal limit only if limit was not reached before

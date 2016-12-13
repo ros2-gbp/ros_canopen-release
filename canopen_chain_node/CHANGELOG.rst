@@ -2,6 +2,9 @@
 Changelog for package canopen_chain_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2016-12-13)
+------------------
+
 0.6.5 (2016-12-10)
 ------------------
 * protect MotorChain setup with RosChain lock
