@@ -1,3 +1,34 @@
+## ros_canopen (kinetic) - 0.7.0-0
+
+The packages in the `ros_canopen` repository were released into the `kinetic` distro by running `/usr/bin/bloom-release ros_canopen --track kinetic --rosdistro kinetic --new-track` on `Thu, 15 Dec 2016 19:12:22 -0000`
+
+These packages were released:
+- `can_msgs`
+- `canopen_402`
+- `canopen_chain_node`
+- `canopen_master`
+- `canopen_motor_node`
+- `ros_canopen`
+- `socketcan_bridge`
+- `socketcan_interface`
+
+Version of package(s) in repository `ros_canopen`:
+
+- upstream repository: https://github.com/ros-industrial/ros_canopen.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `0.7.0-0`
+
+Versions of tools used:
+
+- bloom version: `0.5.23`
+- catkin_pkg version: `0.2.10`
+- rosdep version: `0.11.5`
+- rosdistro version: `0.5.0`
+- vcstools version: `0.1.39`
+
+
 ## ros_canopen (jade) - 0.7.0-0
 
 The packages in the `ros_canopen` repository were released into the `jade` distro by running `/usr/bin/bloom-release ros_canopen --track jade --rosdistro jade --new-track` on `Tue, 13 Dec 2016 09:43:06 -0000`
