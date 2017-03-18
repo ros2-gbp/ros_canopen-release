@@ -1,0 +1,44 @@
+ros-indigo-ros-canopen (0.6.6-0saucy) saucy; urgency=high
+
+
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Fri, 17 Mar 2017 23:00:00 -0000
+
+ros-indigo-ros-canopen (0.6.5-0saucy) saucy; urgency=high
+
+  * updated metapackage
+    * format 2
+    * updated maintaner
+    * added new packages
+  * update package URLs
+  * Contributors: Mathias Lüdtke
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Fri, 09 Dec 2016 23:00:00 -0000
+
+ros-indigo-ros-canopen (0.6.4-0saucy) saucy; urgency=high
+
+
+
+ -- Florian Weisshardt <fmw@ipa.fhg.de>  Thu, 02 Jul 2015 22:00:00 -0000
+
+ros-indigo-ros-canopen (0.6.3-0saucy) saucy; urgency=high
+
+
+
+ -- Florian Weisshardt <fmw@ipa.fhg.de>  Mon, 29 Jun 2015 22:00:00 -0000
+
+ros-indigo-ros-canopen (0.6.2-0saucy) saucy; urgency=high
+
+  * remove canopen_test_utils from metapackage
+  * Contributors: Florian Weisshardt
+
+ -- Florian Weisshardt <fmw@ipa.fhg.de>  Wed, 17 Dec 2014 23:00:00 -0000
+
+ros-indigo-ros-canopen (0.6.1-0saucy) saucy; urgency=high
+
+  * add metapackage
+  * Contributors: Florian Weisshardt
+
+ -- Florian Weisshardt <fmw@ipa.fhg.de>  Sun, 14 Dec 2014 23:00:00 -0000
+
+
