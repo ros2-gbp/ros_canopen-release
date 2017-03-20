@@ -1,0 +1,50 @@
+ros-jade-ros-canopen (0.7.1-0trusty) trusty; urgency=high
+
+
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Sun, 19 Mar 2017 23:00:00 -0000
+
+ros-jade-ros-canopen (0.7.0-0trusty) trusty; urgency=high
+
+
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Mon, 12 Dec 2016 23:00:00 -0000
+
+ros-jade-ros-canopen (0.6.5-0trusty) trusty; urgency=high
+
+  * updated metapackage
+    * format 2
+    * updated maintaner
+    * added new packages
+  * update package URLs
+  * Contributors: Mathias Lüdtke
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Fri, 09 Dec 2016 23:00:00 -0000
+
+ros-jade-ros-canopen (0.6.4-0trusty) trusty; urgency=high
+
+
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Thu, 02 Jul 2015 22:00:00 -0000
+
+ros-jade-ros-canopen (0.6.3-0trusty) trusty; urgency=high
+
+
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Mon, 29 Jun 2015 22:00:00 -0000
+
+ros-jade-ros-canopen (0.6.2-0trusty) trusty; urgency=high
+
+  * remove canopen_test_utils from metapackage
+  * Contributors: Florian Weisshardt
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Wed, 17 Dec 2014 23:00:00 -0000
+
+ros-jade-ros-canopen (0.6.1-0trusty) trusty; urgency=high
+
+  * add metapackage
+  * Contributors: Florian Weisshardt
+
+ -- Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>  Sun, 14 Dec 2014 23:00:00 -0000
+
+
