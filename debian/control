@@ -1,0 +1,12 @@
+Source: ros-lunar-socketcan-bridge
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-lunar-can-msgs, ros-lunar-catkin, ros-lunar-roscpp, ros-lunar-roslint, ros-lunar-rostest, ros-lunar-rosunit, ros-lunar-socketcan-interface
+Homepage: http://wiki.ros.org/socketcan_bridge
+Standards-Version: 3.9.2
+
+Package: ros-lunar-socketcan-bridge
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-lunar-can-msgs, ros-lunar-roscpp, ros-lunar-socketcan-interface
+Description: Provides nodes to convert messages from SocketCAN to a ROS Topic and vice versa.
