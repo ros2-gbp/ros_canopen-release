@@ -1,0 +1,12 @@
+Source: ros-jade-ros-canopen
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-jade-catkin
+Homepage: http://ros.org/wiki/ros_canopen
+Standards-Version: 3.9.2
+
+Package: ros-jade-ros-canopen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-jade-can-msgs, ros-jade-canopen-402, ros-jade-canopen-chain-node, ros-jade-canopen-master, ros-jade-canopen-motor-node, ros-jade-socketcan-bridge, ros-jade-socketcan-interface
+Description: A generic canopen implementation for ROS
