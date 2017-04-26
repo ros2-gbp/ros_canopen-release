@@ -2,6 +2,14 @@
 Changelog for package canopen_402
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.4 (2017-04-25)
+------------------
+* use portable boost::math::isnan
+* Contributors: Mathias Lüdtke
+
+0.7.3 (2017-04-25)
+------------------
+
 0.7.2 (2017-03-28)
 ------------------
 
