@@ -1,0 +1,12 @@
+Source: ros-kinetic-canopen-chain-node
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-kinetic-canopen-master, ros-kinetic-catkin, ros-kinetic-diagnostic-updater, ros-kinetic-message-generation, ros-kinetic-pluginlib, ros-kinetic-roscpp, ros-kinetic-roslib, ros-kinetic-socketcan-interface, ros-kinetic-std-msgs, ros-kinetic-std-srvs
+Homepage: http://wiki.ros.org/canopen_chain_node
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-canopen-chain-node
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-kinetic-canopen-master, ros-kinetic-diagnostic-updater, ros-kinetic-message-runtime, ros-kinetic-pluginlib, ros-kinetic-roscpp, ros-kinetic-roslib, ros-kinetic-socketcan-interface, ros-kinetic-std-msgs, ros-kinetic-std-srvs
+Description: ROS node base implementation for CANopen chains with support for management services and diagnostics
