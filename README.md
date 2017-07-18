@@ -1,3 +1,37 @@
+## ros_canopen (indigo) - 0.6.8-0
+
+The packages in the `ros_canopen` repository were released into the `indigo` distro by running `/usr/bin/bloom-release ros_canopen --track indigo --rosdistro indigo --edit` on `Tue, 18 Jul 2017 18:18:19 -0000`
+
+These packages were released:
+- `can_msgs`
+- `canopen_402`
+- `canopen_chain_node`
+- `canopen_master`
+- `canopen_motor_node`
+- `ros_canopen`
+- `socketcan_bridge`
+- `socketcan_interface`
+
+These packages were explicitly ignored:
+- `canopen_test_utils`
+
+Version of package(s) in repository `ros_canopen`:
+
+- upstream repository: https://github.com/ros-industrial/ros_canopen.git
+- release repository: https://github.com/ros-industrial-release/ros_canopen-release.git
+- rosdistro version: `0.6.7-0`
+- old version: `0.6.7-0`
+- new version: `0.6.8-0`
+
+Versions of tools used:
+
+- bloom version: `0.5.26`
+- catkin_pkg version: `0.3.5`
+- rosdep version: `0.11.5`
+- rosdistro version: `0.6.2`
+- vcstools version: `0.1.39`
+
+
 ## ros_canopen (jade) - 0.7.5-0
 
 The packages in the `ros_canopen` repository were released into the `jade` distro by running `/usr/bin/bloom-release ros_canopen --track jade --rosdistro jade` on `Mon, 29 May 2017 19:08:25 -0000`
