@@ -1,0 +1,12 @@
+Source: ros-indigo-ros-canopen
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-catkin
+Homepage: http://ros.org/wiki/ros_canopen
+Standards-Version: 3.9.2
+
+Package: ros-indigo-ros-canopen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-indigo-can-msgs, ros-indigo-canopen-402, ros-indigo-canopen-chain-node, ros-indigo-canopen-master, ros-indigo-canopen-motor-node, ros-indigo-socketcan-bridge, ros-indigo-socketcan-interface
+Description: A generic canopen implementation for ROS
