@@ -1,0 +1,13 @@
+Source: ros-lunar-canopen-motor-node
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), libmuparser-dev, ros-lunar-canopen-402, ros-lunar-canopen-chain-node, ros-lunar-catkin, ros-lunar-controller-manager, ros-lunar-controller-manager-msgs, ros-lunar-filters, ros-lunar-hardware-interface, ros-lunar-joint-limits-interface, ros-lunar-urdf
+Homepage: http://wiki.ros.org/canopen_motor_node
+Standards-Version: 3.9.2
+
+Package: ros-lunar-canopen-motor-node
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmuparser-dev, ros-lunar-canopen-402, ros-lunar-canopen-chain-node, ros-lunar-controller-manager, ros-lunar-controller-manager-msgs, ros-lunar-filters, ros-lunar-hardware-interface, ros-lunar-joint-limits-interface, ros-lunar-urdf
+Description: This package extends the canopen_chain_node with specialized handling for canopen_402 devices.
+ It facilitates interface abstraction with ros_control.
