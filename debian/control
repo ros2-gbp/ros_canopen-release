@@ -1,0 +1,13 @@
+Source: ros-kinetic-canopen-motor-node
+Section: misc
+Priority: extra
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), libmuparser-dev, ros-kinetic-canopen-402, ros-kinetic-canopen-chain-node, ros-kinetic-catkin, ros-kinetic-controller-manager, ros-kinetic-controller-manager-msgs, ros-kinetic-filters, ros-kinetic-hardware-interface, ros-kinetic-joint-limits-interface, ros-kinetic-urdf
+Homepage: http://wiki.ros.org/canopen_motor_node
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-canopen-motor-node
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libmuparser-dev, ros-kinetic-canopen-402, ros-kinetic-canopen-chain-node, ros-kinetic-controller-manager, ros-kinetic-controller-manager-msgs, ros-kinetic-filters, ros-kinetic-hardware-interface, ros-kinetic-joint-limits-interface, ros-kinetic-urdf
+Description: This package extends the canopen_chain_node with specialized handling for canopen_402 devices.
+ It facilitates interface abstraction with ros_control.
