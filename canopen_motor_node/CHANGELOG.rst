@@ -2,6 +2,9 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.8 (2018-05-04)
+------------------
+
 0.7.7 (2018-05-04)
 ------------------
 * added types for all function objects
