@@ -2,21 +2,51 @@
 Changelog for package canopen_402
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.6.9 (2018-05-23)
+0.7.9 (2018-05-23)
 ------------------
 * fix initialization bug in ProfiledPositionMode
 * Contributors: Mathias Lüdtke
 
-0.6.8 (2017-07-18)
+0.7.8 (2018-05-04)
+------------------
+* Revert "pull make_shared into namespaces"
+  This reverts commit 9b2cd05df76d223647ca81917d289ca6330cdee6.
+* Contributors: Mathias Lüdtke
+
+0.7.7 (2018-05-04)
+------------------
+* Added state_switch_timeout parameter to motor.
+* added types for all function objects
+* pull make_shared into namespaces
+* added types for all shared_ptrs
+* migrate to new classloader headers
+* address catkin_lint errors/warnings
+* Contributors: Alexander Gutenkunst, Mathias Lüdtke
+
+0.7.6 (2017-08-30)
 ------------------
 
-0.6.7 (2017-03-28)
+0.7.5 (2017-05-29)
 ------------------
 
-0.6.6 (2017-03-18)
+0.7.4 (2017-04-25)
+------------------
+* use portable boost::math::isnan
+* Contributors: Mathias Lüdtke
+
+0.7.3 (2017-04-25)
+------------------
+
+0.7.2 (2017-03-28)
+------------------
+
+0.7.1 (2017-03-20)
 ------------------
 * do quickstop for halt only if operation is enabled
 * Contributors: Mathias Lüdtke
+
+0.7.0 (2016-12-13)
+------------------
 
 0.6.5 (2016-12-10)
 ------------------

@@ -2,22 +2,55 @@
 Changelog for package canopen_master
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.6.9 (2018-05-23)
+0.7.9 (2018-05-23)
+------------------
+* provided KeyHash
+  for use with unordered containers
+* added c_array access functons to can::Frame
+* Contributors: Mathias Lüdtke
+
+0.7.8 (2018-05-04)
+------------------
+* Revert "pull make_shared into namespaces"
+  This reverts commit 9b2cd05df76d223647ca81917d289ca6330cdee6.
+* Contributors: Mathias Lüdtke
+
+0.7.7 (2018-05-04)
+------------------
+* added types for all function objects
+* pull make_shared into namespaces
+* added types for all shared_ptrs
+* migrate to new classloader headers
+* throw bad_cast if datatype is not supported
+* special handling of std::bad_cast
+* address catkin_lint errors/warnings
+* removed IPC/SHM based sync masters
+* Contributors: Mathias Lüdtke
+
+0.7.6 (2017-08-30)
 ------------------
 
-0.6.8 (2017-07-18)
+0.7.5 (2017-05-29)
 ------------------
 * added EMCYHandler::resetErrors
 * added VectorHelper::callFunc
   generalized call templates
 * Contributors: Mathias Lüdtke
 
-0.6.7 (2017-03-28)
+0.7.4 (2017-04-25)
+------------------
+
+0.7.3 (2017-04-25)
+------------------
+* enforce boost::chrono-based timer
+* Contributors: Mathias Lüdtke
+
+0.7.2 (2017-03-28)
 ------------------
 * fix: handle EMCY as error, not as warning
 * Contributors: Mathias Lüdtke
 
-0.6.6 (2017-03-18)
+0.7.1 (2017-03-20)
 ------------------
 * refactored EMCY handling into separate layer
 * print EMCY to stdout
@@ -25,10 +58,13 @@ Changelog for package canopen_master
   needed for external sync to work properly
 * pass halt on error unconditionally
 * added canopen_bcm_sync
+* implemented ExternalMaster
 * added object access services
 * implemented ObjectStorage::getStringReader
-* implemented ExternalMaster
 * Contributors: Mathias Lüdtke
+
+0.7.0 (2016-12-13)
+------------------
 
 0.6.5 (2016-12-10)
 ------------------
