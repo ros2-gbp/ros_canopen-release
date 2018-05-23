@@ -2,6 +2,9 @@
 Changelog for package canopen_master
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.9 (2018-05-23)
+------------------
+
 0.6.8 (2017-07-18)
 ------------------
 * added EMCYHandler::resetErrors
