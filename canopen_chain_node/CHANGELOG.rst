@@ -2,54 +2,31 @@
 Changelog for package canopen_chain_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.8 (2018-05-04)
-------------------
-* Revert "pull make_shared into namespaces"
-  This reverts commit 9b2cd05df76d223647ca81917d289ca6330cdee6.
-* Contributors: Mathias Lüdtke
-
-0.7.7 (2018-05-04)
-------------------
-* added types for all function objects
-* pull make_shared into namespaces
-* added types for all shared_ptrs
-* migrate to new classloader headers
-* address catkin_lint errors/warnings
-* removed IPC/SHM based sync masters
-* Contributors: Mathias Lüdtke
-
-0.7.6 (2017-08-30)
+0.6.9 (2018-05-23)
 ------------------
 
-0.7.5 (2017-05-29)
+0.6.8 (2017-07-18)
 ------------------
 * added reset_errors_before_recover option
 * Contributors: Mathias Lüdtke
 
-0.7.4 (2017-04-25)
+0.6.7 (2017-03-28)
 ------------------
 
-0.7.3 (2017-04-25)
-------------------
-
-0.7.2 (2017-03-28)
-------------------
-
-0.7.1 (2017-03-20)
+0.6.6 (2017-03-18)
 ------------------
 * refactored EMCY handling into separate layer
 * do not reset thread for recover
 * properly stop run thread if init failed
+* Merge pull request `#201 <https://github.com/ros-industrial/ros_canopen/issues/201>`_ from ipa-mdl/bcm-sync
+  Added support for external sync providers
 * deprecation warning for SHM-based master implementations
 * implemented canopen_sync_node
-* wait only if sync is disabled
 * added object access services
 * implement level-based object logging
 * added node name lookup
+* wait only if sync is disabled
 * Contributors: Mathias Lüdtke
-
-0.7.0 (2016-12-13)
-------------------
 
 0.6.5 (2016-12-10)
 ------------------

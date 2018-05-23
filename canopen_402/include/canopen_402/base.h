@@ -28,17 +28,14 @@ public:
     virtual bool enterModeAndWait(uint16_t mode) = 0;
     virtual bool isModeSupported(uint16_t mode) = 0;
     virtual uint16_t getMode() = 0;
-    virtual void registerDefaultModes(ObjectStorageSharedPtr storage) {}
-
-    typedef boost::shared_ptr<MotorBase> MotorBaseSharedPtr;
+    virtual void registerDefaultModes(boost::shared_ptr<ObjectStorage> storage) {}
 
     class Allocator {
     public:
-        virtual MotorBaseSharedPtr allocate(const std::string &name, ObjectStorageSharedPtr storage, const canopen::Settings &settings) = 0;
+        virtual boost::shared_ptr<MotorBase> allocate(const std::string &name, boost::shared_ptr<ObjectStorage> storage, const canopen::Settings &settings) = 0;
         virtual ~Allocator() {}
     };
 };
-typedef MotorBase::MotorBaseSharedPtr MotorBaseSharedPtr;
 
 }
 

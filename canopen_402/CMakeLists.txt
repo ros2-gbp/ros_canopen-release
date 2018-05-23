@@ -14,7 +14,7 @@ catkin_package(
   INCLUDE_DIRS
     include
   LIBRARIES
-    ${PROJECT_NAME}
+    canopen_402
   CATKIN_DEPENDS
     canopen_master
   DEPENDS
@@ -28,26 +28,26 @@ include_directories(
 )
 
 # canopen_402
-add_library(${PROJECT_NAME}
+add_library(canopen_402
   src/motor.cpp
 )
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(canopen_402
   ${catkin_LIBRARIES}
 )
 
 # canopen_402_plugin
-add_library(${PROJECT_NAME}_plugin
+add_library(canopen_402_plugin
   src/plugin.cpp
 )
-target_link_libraries(${PROJECT_NAME}_plugin
+target_link_libraries(canopen_402_plugin
    ${catkin_LIBRARIES}
-   ${PROJECT_NAME}
+   canopen_402
 )
 
 install(
   TARGETS
-    ${PROJECT_NAME}
-    ${PROJECT_NAME}_plugin
+    canopen_402
+    canopen_402_plugin
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -59,7 +59,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 )
 install(
   FILES
-    ${PROJECT_NAME}_plugin.xml
+    canopen_402_plugin.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 

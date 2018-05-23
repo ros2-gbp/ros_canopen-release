@@ -68,10 +68,10 @@ target_link_libraries(topic_to_socketcan_node
 )
 
 # socketcan_bridge_node
-add_executable(${PROJECT_NAME}_node
-  src/${PROJECT_NAME}_node.cpp
+add_executable(socketcan_bridge_node
+  src/socketcan_bridge_node.cpp
 )
-target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(socketcan_bridge_node
   topic_to_socketcan
   socketcan_to_topic
   ${catkin_LIBRARIES}
@@ -79,7 +79,7 @@ target_link_libraries(${PROJECT_NAME}_node
 
 install(
   TARGETS
-    ${PROJECT_NAME}_node
+    socketcan_bridge_node
     socketcan_to_topic
     socketcan_to_topic_node
     topic_to_socketcan
@@ -128,7 +128,6 @@ if(CATKIN_ENABLE_TESTING)
   )
   target_link_libraries(test_to_topic
     socketcan_to_topic
-    topic_to_socketcan
     ${catkin_LIBRARIES}
   )
 

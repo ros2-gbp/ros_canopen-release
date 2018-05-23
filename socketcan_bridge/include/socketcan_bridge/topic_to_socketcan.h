@@ -37,14 +37,14 @@ namespace socketcan_bridge
 class TopicToSocketCAN
 {
   public:
-    TopicToSocketCAN(ros::NodeHandle* nh, ros::NodeHandle* nh_param, can::DriverInterfaceSharedPtr driver);
+    TopicToSocketCAN(ros::NodeHandle* nh, ros::NodeHandle* nh_param, boost::shared_ptr<can::DriverInterface> driver);
     void setup();
 
   private:
     ros::Subscriber can_topic_;
-    can::DriverInterfaceSharedPtr driver_;
+    boost::shared_ptr<can::DriverInterface> driver_;
 
-    can::StateListenerConstSharedPtr state_listener_;
+    can::StateInterface::StateListener::Ptr state_listener_;
 
     void msgCallback(const can_msgs::Frame::ConstPtr& msg);
     void stateCallback(const can::State & s);

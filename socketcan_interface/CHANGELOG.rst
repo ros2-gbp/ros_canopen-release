@@ -2,61 +2,26 @@
 Changelog for package socketcan_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.8 (2018-05-04)
+0.6.9 (2018-05-23)
 ------------------
-* Revert "pull make_shared into namespaces"
-  This reverts commit 9b2cd05df76d223647ca81917d289ca6330cdee6.
-* Contributors: Mathias Lüdtke
-
-0.7.7 (2018-05-04)
-------------------
-* pull make_shared into namespaces
-* added types for all shared_ptrs
-* fix catkin_lint warnings in filter tests
-* migrate to new classloader headers
-* find and link the thread library properly
-* compile also with boost >= 1.66.0
 * explicitly include iostream to compile with boost >= 1.65.0
-* address catkin_lint errors/warnings
-* added test for FilteredFrameListener
-* fix string parsers
-* default to relaxed filter handling
-  works for standard and extended frames
-* fix string handling of extended frames
-* added filter parsers
-  should work for vector<unsigned int>, vector<string> and custom vector-like classes
-* implemented mask and range filters for can::Frame
-* Contributors: Lukas Bulwahn, Mathias Lüdtke
+* Contributors: Lukas Bulwahn
 
-0.7.6 (2017-08-30)
-------------------
-* make can::Header/Frame::isValid() const
-* Contributors: Mathias Lüdtke
-
-0.7.5 (2017-05-29)
+0.6.8 (2017-07-18)
 ------------------
 * fix rosdep dependency on kernel headers
 * Contributors: Mathias Lüdtke
 
-0.7.4 (2017-04-25)
+0.6.7 (2017-03-28)
 ------------------
 
-0.7.3 (2017-04-25)
-------------------
-
-0.7.2 (2017-03-28)
-------------------
-
-0.7.1 (2017-03-20)
+0.6.6 (2017-03-18)
 ------------------
 * stop CAN driver on read errors as well
 * expose socketcan handle
 * implemented BCMsocket
 * introduced BufferedReader::readUntil
 * Contributors: Mathias Lüdtke
-
-0.7.0 (2016-12-13)
-------------------
 
 0.6.5 (2016-12-10)
 ------------------

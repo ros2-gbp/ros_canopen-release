@@ -63,10 +63,10 @@ add_dependencies(canopen_ros_chain
 )
 
 # canopen_chain_node
-add_executable(${PROJECT_NAME}
+add_executable(canopen_chain_node
   src/chain_node.cpp
 )
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(canopen_chain_node
   canopen_ros_chain
   ${Boost_LIBRARIES}
   ${catkin_LIBRARIES}
@@ -83,7 +83,7 @@ target_link_libraries(canopen_sync_node
 
 install(
   TARGETS
-    ${PROJECT_NAME}
+    canopen_chain_node
     canopen_ros_chain
     canopen_sync_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
