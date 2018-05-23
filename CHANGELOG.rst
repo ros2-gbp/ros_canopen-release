@@ -2,6 +2,11 @@
 Changelog for package socketcan_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.9 (2018-05-23)
+------------------
+* explicitly include iostream to compile with boost >= 1.65.0
+* Contributors: Lukas Bulwahn
+
 0.6.8 (2017-07-18)
 ------------------
 * fix rosdep dependency on kernel headers
