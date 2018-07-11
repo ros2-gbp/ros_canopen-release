@@ -2,8 +2,11 @@
 Changelog for package socketcan_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.9 (2018-05-23)
+0.8.0 (2018-07-11)
 ------------------
+* keep NodeHandle alive in socketcan_bridge tests
+* migrated to std::function and std::bind
+* migrated to std pointers
 * compare can_msgs::Frame and can::Frame properly
 * Contributors: Mathias Lüdtke
 

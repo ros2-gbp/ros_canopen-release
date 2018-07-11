@@ -2,8 +2,15 @@
 Changelog for package socketcan_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.9 (2018-05-23)
+0.8.0 (2018-07-11)
 ------------------
+* migrated to std::function and std::bind
+* got rid of boost::noncopyable
+* replaced BOOST_FOREACH
+* migrated to std::unordered_map and std::unordered_set
+* migrated to std:array
+* migrated to std pointers
+* removed deprecated types
 * introduced ROSCANOPEN_MAKE_SHARED
 * added c_array access functons to can::Frame
 * Contributors: Mathias Lüdtke

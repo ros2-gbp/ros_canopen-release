@@ -265,7 +265,10 @@ uint16_t Motor402::getMode() {
 }
 
 bool Motor402::isModeSupportedByDevice(uint16_t mode){
-    return mode > 0 && supported_drive_modes_.valid() && (supported_drive_modes_.get_cached() & (1<<(mode-1)));
+    if(!supported_drive_modes_.valid()) {
+        BOOST_THROW_EXCEPTION( std::runtime_error("Supported drive modes (object 6502) is not valid"));
+    }
+    return mode > 0 && mode <= 32 && (supported_drive_modes_.get_cached() & (1<<(mode-1)));
 }
 void Motor402::registerMode(uint16_t id, const ModeSharedPtr &m){
     boost::mutex::scoped_lock map_lock(map_mutex_);
@@ -276,7 +279,7 @@ ModeSharedPtr Motor402::allocMode(uint16_t mode){
     ModeSharedPtr res;
     if(isModeSupportedByDevice(mode)){
         boost::mutex::scoped_lock map_lock(map_mutex_);
-        boost::unordered_map<uint16_t, ModeSharedPtr >::iterator it = modes_.find(mode);
+        std::unordered_map<uint16_t, ModeSharedPtr >::iterator it = modes_.find(mode);
         if(it != modes_.end()){
             res = it->second;
         }
@@ -465,7 +468,7 @@ void Motor402::handleDiag(LayerReport &report){
     }
 }
 void Motor402::handleInit(LayerStatus &status){
-    for(boost::unordered_map<uint16_t, AllocFuncType>::iterator it = mode_allocators_.begin(); it != mode_allocators_.end(); ++it){
+    for(std::unordered_map<uint16_t, AllocFuncType>::iterator it = mode_allocators_.begin(); it != mode_allocators_.end(); ++it){
         (it->second)();
     }
 
