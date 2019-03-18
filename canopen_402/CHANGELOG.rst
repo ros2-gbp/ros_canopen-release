@@ -2,14 +2,14 @@
 Changelog for package canopen_402
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.8.0 (2018-07-11)
-------------------
+0.7.10 (2019-03-18)
+-------------------
+* require minimum version of class_loader and pluginlib
 * handle invalid supported drive modes object
-* made Mode402::registerMode a variadic template
-* use std::isnan
-* migrated to std::atomic
-* migrated to std::unordered_map and std::unordered_set
-* migrated to std pointers
+* Contributors: Mathias Lüdtke
+
+0.7.9 (2018-05-23)
+------------------
 * fix initialization bug in ProfiledPositionMode
 * Contributors: Mathias Lüdtke
 

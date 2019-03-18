@@ -2,14 +2,13 @@
 Changelog for package canopen_master
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.8.0 (2018-07-11)
+0.7.10 (2019-03-18)
+-------------------
+* require minimum version of class_loader and pluginlib
+* Contributors: Mathias Lüdtke
+
+0.7.9 (2018-05-23)
 ------------------
-* migrated to std::function and std::bind
-* migrated to std::atomic
-* got rid of boost::noncopyable
-* replaced BOOST_FOREACH
-* migrated to std::unordered_map and std::unordered_set
-* migrated to std pointers
 * provided KeyHash
   for use with unordered containers
 * added c_array access functons to can::Frame

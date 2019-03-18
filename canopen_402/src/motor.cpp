@@ -279,7 +279,7 @@ ModeSharedPtr Motor402::allocMode(uint16_t mode){
     ModeSharedPtr res;
     if(isModeSupportedByDevice(mode)){
         boost::mutex::scoped_lock map_lock(map_mutex_);
-        std::unordered_map<uint16_t, ModeSharedPtr >::iterator it = modes_.find(mode);
+        boost::unordered_map<uint16_t, ModeSharedPtr >::iterator it = modes_.find(mode);
         if(it != modes_.end()){
             res = it->second;
         }
@@ -468,7 +468,7 @@ void Motor402::handleDiag(LayerReport &report){
     }
 }
 void Motor402::handleInit(LayerStatus &status){
-    for(std::unordered_map<uint16_t, AllocFuncType>::iterator it = mode_allocators_.begin(); it != mode_allocators_.end(); ++it){
+    for(boost::unordered_map<uint16_t, AllocFuncType>::iterator it = mode_allocators_.begin(); it != mode_allocators_.end(); ++it){
         (it->second)();
     }
 

@@ -18,7 +18,7 @@ class CANLayer: public Layer{
         last_error_ = msg;
         LOG("ID: " << msg.id);
     }
-    std::shared_ptr<boost::thread> thread_;
+    boost::shared_ptr<boost::thread> thread_;
 
 public:
     CANLayer(const can::DriverInterfaceSharedPtr &driver, const std::string &device, bool loopback)

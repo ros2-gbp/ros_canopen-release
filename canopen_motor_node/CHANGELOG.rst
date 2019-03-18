@@ -2,14 +2,11 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.8.0 (2018-07-11)
+0.7.10 (2019-03-18)
+-------------------
+
+0.7.9 (2018-05-23)
 ------------------
-* migrated to std::function and std::bind
-* use std::isnan
-* migrated to std::atomic
-* migrated to std::unordered_map and std::unordered_set
-* migrated to std pointers
-* removed deprecated types
 * introduced HandleLayerSharedPtr
 * Contributors: Mathias Lüdtke
 

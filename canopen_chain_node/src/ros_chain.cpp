@@ -16,47 +16,27 @@
 
 namespace canopen {
 
-template<typename Tpub, int dt>
-static PublishFuncType create(ros::NodeHandle &nh,  const std::string &name, ObjectStorageSharedPtr storage, const std::string &key, const bool force){
-    using data_type = typename ObjectStorage::DataType<dt>::type;
-    using entry_type = ObjectStorage::Entry<data_type>;
-
-    entry_type entry = storage->entry<data_type>(key);
-    if(!entry.valid()) return 0;
-
-    const ros::Publisher pub = nh.advertise<Tpub>(name, 1);
-
-    typedef const data_type(entry_type::*getter_type)(void);
-    const getter_type getter = force ? static_cast<getter_type>(&entry_type::get) : static_cast<getter_type>(&entry_type::get_cached);
-
-    return [force, pub, entry, getter] () mutable {
-        Tpub msg;
-        msg.data = (const typename Tpub::_data_type &) (entry.*getter)();
-        pub.publish(msg);
-    };
-}
-
-PublishFuncType createPublishFunc(ros::NodeHandle &nh,  const std::string &name, canopen::NodeSharedPtr node, const std::string &key, bool force){
+PublishFunc::FuncType PublishFunc::create(ros::NodeHandle &nh,  const std::string &name, canopen::NodeSharedPtr node, const std::string &key, bool force){
     ObjectStorageSharedPtr s = node->getStorage();
 
     switch(ObjectDict::DataTypes(s->dict_->get(key)->data_type)){
-        case ObjectDict::DEFTYPE_INTEGER8:       return create< std_msgs::Int8,    ObjectDict::DEFTYPE_INTEGER8       >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_INTEGER16:      return create< std_msgs::Int16,   ObjectDict::DEFTYPE_INTEGER16      >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_INTEGER32:      return create< std_msgs::Int32,   ObjectDict::DEFTYPE_INTEGER32      >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_INTEGER64:      return create< std_msgs::Int64,   ObjectDict::DEFTYPE_INTEGER64      >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_INTEGER8:       return create< std_msgs::Int8    >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER8>::type>(key), force);
+        case ObjectDict::DEFTYPE_INTEGER16:      return create< std_msgs::Int16   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER16>::type>(key), force);
+        case ObjectDict::DEFTYPE_INTEGER32:      return create< std_msgs::Int32   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER32>::type>(key), force);
+        case ObjectDict::DEFTYPE_INTEGER64:      return create< std_msgs::Int64   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER64>::type>(key), force);
 
-        case ObjectDict::DEFTYPE_UNSIGNED8:      return create< std_msgs::UInt8,   ObjectDict::DEFTYPE_UNSIGNED8      >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_UNSIGNED16:     return create< std_msgs::UInt16,  ObjectDict::DEFTYPE_UNSIGNED16     >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_UNSIGNED32:     return create< std_msgs::UInt32,  ObjectDict::DEFTYPE_UNSIGNED32     >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_UNSIGNED64:     return create< std_msgs::UInt64,  ObjectDict::DEFTYPE_UNSIGNED64     >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_UNSIGNED8:      return create< std_msgs::UInt8   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED8>::type>(key), force);
+        case ObjectDict::DEFTYPE_UNSIGNED16:     return create< std_msgs::UInt16  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED16>::type>(key), force);
+        case ObjectDict::DEFTYPE_UNSIGNED32:     return create< std_msgs::UInt32  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED32>::type>(key), force);
+        case ObjectDict::DEFTYPE_UNSIGNED64:     return create< std_msgs::UInt64  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED64>::type>(key), force);
 
-        case ObjectDict::DEFTYPE_REAL32:         return create< std_msgs::Float32, ObjectDict::DEFTYPE_REAL32         >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_REAL64:         return create< std_msgs::Float64, ObjectDict::DEFTYPE_REAL64         >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_REAL32:         return create< std_msgs::Float32 >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_REAL32>::type>(key), force);
+        case ObjectDict::DEFTYPE_REAL64:         return create< std_msgs::Float64 >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_REAL64>::type>(key), force);
 
-        case ObjectDict::DEFTYPE_VISIBLE_STRING: return create< std_msgs::String,  ObjectDict::DEFTYPE_VISIBLE_STRING >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_OCTET_STRING:   return create< std_msgs::String,  ObjectDict::DEFTYPE_DOMAIN         >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_UNICODE_STRING: return create< std_msgs::String,  ObjectDict::DEFTYPE_UNICODE_STRING >(nh, name, s, key, force);
-        case ObjectDict::DEFTYPE_DOMAIN:         return create< std_msgs::String,  ObjectDict::DEFTYPE_DOMAIN         >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_VISIBLE_STRING: return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_VISIBLE_STRING>::type>(key), force);
+        case ObjectDict::DEFTYPE_OCTET_STRING:   return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_DOMAIN>::type>(key), force);
+        case ObjectDict::DEFTYPE_UNICODE_STRING: return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNICODE_STRING>::type>(key), force);
+        case ObjectDict::DEFTYPE_DOMAIN:         return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_DOMAIN>::type>(key), force);
 
         default: return 0;
     }
@@ -162,7 +142,7 @@ bool RosChain::handle_recover(std_srvs::Trigger::Request  &req, std_srvs::Trigge
 void RosChain::handleWrite(LayerStatus &status, const LayerState &current_state) {
     LayerStack::handleWrite(status, current_state);
     if(current_state > Shutdown){
-        for(const PublishFuncType& func: publishers_) func();
+        for(std::vector<PublishFunc::FuncType>::iterator it = publishers_.begin(); it != publishers_.end(); ++it) (*it)();
     }
 }
 
@@ -283,7 +263,7 @@ bool RosChain::setup_bus(){
         return false;
     }
 
-    add(std::make_shared<CANLayer>(interface_, can_device, loopback));
+    add(boost::make_shared<CANLayer>(interface_, can_device, loopback));
 
     return true;
 }
@@ -484,9 +464,9 @@ bool RosChain::setup_nodes(){
             ROS_ERROR_STREAM("EDS '" << eds << "' could not be parsed");
             return false;
         }
-        canopen::NodeSharedPtr node = std::make_shared<canopen::Node>(interface_, dict, node_id, sync_);
+        canopen::NodeSharedPtr node = boost::make_shared<canopen::Node>(interface_, dict, node_id, sync_);
 
-        LoggerSharedPtr logger = std::make_shared<Logger>(node);
+        LoggerSharedPtr logger = boost::make_shared<Logger>(node);
 
         if(!nodeAdded(merged, node, logger)) return false;
 
@@ -495,7 +475,7 @@ bool RosChain::setup_nodes(){
         if(!addLoggerEntries(merged, "log_error", diagnostic_updater::DiagnosticStatusWrapper::ERROR, *logger)) return false;
 
         loggers_.push_back(logger);
-        diag_updater_.add(it->first, std::bind(&Logger::log, logger, std::placeholders::_1));
+        diag_updater_.add(it->first, boost::bind(&Logger::log, logger, _1));
 
         std::string node_name = std::string(merged["name"]);
 
@@ -505,7 +485,7 @@ bool RosChain::setup_nodes(){
                 for(int i = 0; i < objs.size(); ++i){
                     std::pair<std::string, bool> obj_name = parseObjectName(objs[i]);
 
-                    PublishFuncType pub = createPublishFunc(nh_, node_name +"_"+obj_name.first, node, obj_name.first, obj_name.second);
+                    PublishFunc::FuncType pub = PublishFunc::create(nh_, node_name +"_"+obj_name.first, node, obj_name.first, obj_name.second);
                     if(!pub){
                         ROS_ERROR_STREAM("Could not create publisher for '" << obj_name.first << "'");
                         return false;
@@ -521,7 +501,7 @@ bool RosChain::setup_nodes(){
         nodes_->add(node);
         nodes_lookup_.insert(std::make_pair(node_name, node));
 
-        std::shared_ptr<canopen::EMCYHandler> emcy = std::make_shared<canopen::EMCYHandler>(interface_, node->getStorage());
+        boost::shared_ptr<canopen::EMCYHandler> emcy = boost::make_shared<canopen::EMCYHandler>(interface_, node->getStorage());
         emcy_handlers_->add(emcy);
         logger->add(emcy);
 
@@ -573,7 +553,7 @@ bool RosChain::setup_chain(){
     diag_updater_.setHardwareID(hw_id);
     diag_updater_.add("chain", this, &RosChain::report_diagnostics);
 
-    diag_timer_ = nh_.createTimer(ros::Duration(diag_updater_.getPeriod()/2.0),std::bind(&diagnostic_updater::Updater::update, &diag_updater_));
+    diag_timer_ = nh_.createTimer(ros::Duration(diag_updater_.getPeriod()/2.0),boost::bind(&diagnostic_updater::Updater::update, &diag_updater_));
 
     ros::NodeHandle nh_driver(nh_, "driver");
 
