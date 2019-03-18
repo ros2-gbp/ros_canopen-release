@@ -2,6 +2,11 @@
 Changelog for package canopen_master
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.10 (2019-03-18)
+-------------------
+* require minimum version of class_loader and pluginlib
+* Contributors: Mathias Lüdtke
+
 0.7.9 (2018-05-23)
 ------------------
 * provided KeyHash
