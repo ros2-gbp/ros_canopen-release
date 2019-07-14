@@ -2,6 +2,9 @@
 Changelog for package canopen_402
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.11 (2019-07-14)
+-------------------
+
 0.7.10 (2019-03-18)
 -------------------
 * require minimum version of class_loader and pluginlib
