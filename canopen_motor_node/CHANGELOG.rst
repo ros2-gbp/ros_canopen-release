@@ -2,6 +2,11 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.11 (2019-07-14)
+-------------------
+* inherit LimitsHandle from LimitsHandleBase
+* Contributors: Mathias Lüdtke
+
 0.7.10 (2019-03-18)
 -------------------
 
