@@ -6,14 +6,14 @@
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
-#include <boost/bind.hpp>
+#include <functional>
 
 namespace can{
 
 
 template<typename Socket> class AsioDriver : public DriverInterface{
-    typedef FilteredDispatcher<const unsigned int, CommInterface::FrameListener> FrameDispatcher;
-    typedef SimpleDispatcher<StateInterface::StateListener> StateDispatcher;
+    using FrameDispatcher = FilteredDispatcher<unsigned int, CommInterface::FrameListener>;
+    using StateDispatcher = SimpleDispatcher<StateInterface::StateListener>;
     FrameDispatcher frame_dispatcher_;
     StateDispatcher state_dispatcher_;
 
@@ -92,7 +92,7 @@ public:
             boost::asio::io_service::work work(io_service_);
             setDriverState(State::ready);
 
-            boost::thread post_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
+            boost::thread post_thread([this]() { io_service_.run(); });
 
             triggerReadSome();
 
@@ -116,13 +116,13 @@ public:
         io_service_.stop();
     }
 
-    virtual FrameListenerConstSharedPtr createMsgListener(const FrameDelegate &delegate){
+    virtual FrameListenerConstSharedPtr createMsgListener(const FrameFunc &delegate){
         return frame_dispatcher_.createListener(delegate);
     }
-    virtual FrameListenerConstSharedPtr createMsgListener(const Frame::Header&h , const FrameDelegate &delegate){
+    virtual FrameListenerConstSharedPtr createMsgListener(const Frame::Header&h , const FrameFunc &delegate){
         return frame_dispatcher_.createListener(h, delegate);
     }
-    virtual StateListenerConstSharedPtr createStateListener(const StateDelegate &delegate){
+    virtual StateListenerConstSharedPtr createStateListener(const StateFunc &delegate){
         return state_dispatcher_.createListener(delegate);
     }
 

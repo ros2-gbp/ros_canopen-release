@@ -121,16 +121,22 @@ void PDOMapper::PDO::parse_and_set_mapping(const ObjectStorageSharedPtr &storage
             if(!init.is_empty()) mapentry.set(init.get<uint32_t>());
 
             PDOmap param(mapentry.get_cached());
-            BufferSharedPtr b = boost::make_shared<Buffer>(param.length/8);
+            BufferSharedPtr b = std::make_shared<Buffer>(param.length/8);
             if(param.index < 0x1000){
                 // TODO: check DummyUsage
             }else{
-                ObjectStorage::ReadDelegate rd;
-                ObjectStorage::WriteDelegate wd;
-                if(read) rd = ObjectStorage::ReadDelegate(b.get(), &Buffer::read);
-                if(read || write) wd = ObjectStorage::WriteDelegate(b.get(), &Buffer::write); // set writer for buffer setup or as write delegate
-                size_t l = storage->map(param.index, param.sub_index, rd, wd);
-                assert(l  == param.length/8);
+                ObjectStorage::ReadFunc rd;
+                ObjectStorage::WriteFunc wd;
+
+                if(read){
+                  rd = std::bind<void(Buffer::*)(const canopen::ObjectDict::Entry&, String&)>(&Buffer::read, b.get(), std::placeholders::_1, std::placeholders::_2);
+                }
+                if(read || write)
+                {
+                    wd = std::bind<void(Buffer::*)(const canopen::ObjectDict::Entry&, const String&)>(&Buffer::write, b.get(), std::placeholders::_1, std::placeholders::_2);
+                    size_t l = storage->map(param.index, param.sub_index, rd, wd);
+                    assert(l  == param.length/8);
+                }
             }
 
             frame.dlc += b->size;
@@ -219,7 +225,7 @@ bool PDOMapper::RPDO::init(const ObjectStorageSharedPtr &storage, const uint16_t
 
     transmission_type = dict(com_index, SUB_COM_TRANSMISSION_TYPE).value().get<uint8_t>();
 
-    listener_ = interface_->createMsgListener(pdoid.header() ,can::CommInterface::FrameDelegate(this, &RPDO::handleFrame));
+    listener_ = interface_->createMsgListenerM(pdoid.header(), this, &RPDO::handleFrame);
 
     return true;
 }
@@ -319,13 +325,13 @@ void PDOMapper::RPDO::handleFrame(const can::Frame & msg){
 
 void PDOMapper::read(LayerStatus &status){
     boost::mutex::scoped_lock lock(mutex_);
-    for(boost::unordered_set<RPDO::RPDOSharedPtr >::iterator it = rpdos_.begin(); it != rpdos_.end(); ++it){
+    for(std::unordered_set<RPDO::RPDOSharedPtr >::iterator it = rpdos_.begin(); it != rpdos_.end(); ++it){
         (*it)->sync(status);
     }
 }
 bool PDOMapper::write(){
     boost::mutex::scoped_lock lock(mutex_);
-    for(boost::unordered_set<TPDO::TPDOSharedPtr >::iterator it = tpdos_.begin(); it != tpdos_.end(); ++it){
+    for(std::unordered_set<TPDO::TPDOSharedPtr >::iterator it = tpdos_.begin(); it != tpdos_.end(); ++it){
         (*it)->sync();
     }
     return true; // TODO: check for errors
