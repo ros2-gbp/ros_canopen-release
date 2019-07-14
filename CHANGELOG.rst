@@ -2,6 +2,9 @@
 Changelog for package socketcan_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.11 (2019-07-14)
+-------------------
+
 0.7.10 (2019-03-18)
 -------------------
 * keep NodeHandle alive in socketcan_bridge tests
