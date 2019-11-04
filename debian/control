@@ -1,0 +1,12 @@
+Source: ros-melodic-canopen-chain-node
+Section: misc
+Priority: optional
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-canopen-master, ros-melodic-catkin, ros-melodic-diagnostic-updater, ros-melodic-message-generation, ros-melodic-pluginlib, ros-melodic-rosconsole-bridge, ros-melodic-roscpp, ros-melodic-roslib, ros-melodic-socketcan-interface, ros-melodic-std-msgs, ros-melodic-std-srvs
+Homepage: http://wiki.ros.org/canopen_chain_node
+Standards-Version: 3.9.2
+
+Package: ros-melodic-canopen-chain-node
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-canopen-master, ros-melodic-diagnostic-updater, ros-melodic-message-runtime, ros-melodic-pluginlib, ros-melodic-rosconsole-bridge, ros-melodic-roscpp, ros-melodic-roslib, ros-melodic-socketcan-interface, ros-melodic-std-msgs, ros-melodic-std-srvs
+Description: Base implementation for CANopen chains node with support for management services and diagnostics
