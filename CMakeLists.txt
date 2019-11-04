@@ -9,6 +9,7 @@ endif()
 find_package(catkin REQUIRED
   COMPONENTS
     can_msgs
+    rosconsole_bridge
     roscpp
     socketcan_interface
 )
@@ -21,6 +22,7 @@ catkin_package(
     topic_to_socketcan
   CATKIN_DEPENDS
     can_msgs
+    rosconsole_bridge
     roscpp
     socketcan_interface
 )
@@ -33,6 +35,7 @@ include_directories(
 
 # socketcan_to_topic
 add_library(socketcan_to_topic
+  src/rosconsole_bridge.cpp
   src/socketcan_to_topic.cpp
 )
 target_link_libraries(socketcan_to_topic
@@ -44,6 +47,7 @@ add_dependencies(socketcan_to_topic
 
 # topic_to_socketcan
 add_library(topic_to_socketcan
+  src/rosconsole_bridge.cpp
   src/topic_to_socketcan.cpp
 )
 target_link_libraries(topic_to_socketcan
@@ -105,7 +109,7 @@ if(CATKIN_ENABLE_TESTING)
   find_package(roslint REQUIRED)
 
   roslint_cpp()
-  #for use with catkin_make roslint_socketcan_bridge
+  roslint_add_test()
 
   # unit test for the can_msgs::Frame and can::Frame types.
   catkin_add_gtest(test_conversion
