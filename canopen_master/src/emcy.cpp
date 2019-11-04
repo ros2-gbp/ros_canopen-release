@@ -42,7 +42,7 @@ struct EMCYmsg{
 
 void EMCYHandler::handleEMCY(const can::Frame & msg){
     EMCYmsg::Frame em(msg);
-    ROSCANOPEN_ERROR("canopen_master", "EMCY received: " << msg);
+    LOG("EMCY: " << can::tostring(msg, false));
     has_error_ = (em.data.error_register & ~32) != 0;
 }
 
@@ -56,9 +56,7 @@ EMCYHandler::EMCYHandler(const can::CommInterfaceSharedPtr interface, const Obje
     }
     try{
         EMCYid emcy_id(storage_->entry<uint32_t>(0x1014).get_cached());
-        emcy_listener_ = interface->createMsgListenerM(emcy_id.header(), this, &EMCYHandler::handleEMCY);
-
-
+        emcy_listener_ = interface->createMsgListener( emcy_id.header(), can::CommInterface::FrameDelegate(this, &EMCYHandler::handleEMCY));
     }
     catch(...){
        // pass, EMCY is optional
@@ -122,7 +120,7 @@ void EMCYHandler::handleInit(LayerStatus &status){
         status.error("Could not read error error_register");
         return;
     }else if(error_register & 1){
-        ROSCANOPEN_ERROR("canopen_master", "error register: " << int(error_register));
+        LOG("ER: " << int(error_register));
         status.error("Node has emergency error");
         return;
     }

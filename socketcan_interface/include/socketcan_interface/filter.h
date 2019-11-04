@@ -12,7 +12,7 @@ public:
   virtual bool pass(const can::Frame &frame) const = 0;
   virtual ~FrameFilter() {}
 };
-using FrameFilterSharedPtr = std::shared_ptr<FrameFilter>;
+typedef boost::shared_ptr<FrameFilter> FrameFilterSharedPtr;
 
 class FrameMaskFilter : public FrameFilter {
 public:
@@ -22,8 +22,7 @@ public:
   : mask_(mask), masked_id_(can_id & mask), invert_(invert)
   {}
   virtual bool pass(const can::Frame &frame) const{
-    const uint32_t k = frame.key();
-    return ((mask_ & k) == masked_id_) != invert_;
+    return ((mask_ & frame) == masked_id_) != invert_;
   }
 private:
   const uint32_t mask_;
@@ -37,8 +36,7 @@ public:
   : min_id_(min_id), max_id_(max_id), invert_(invert)
   {}
   virtual bool pass(const can::Frame &frame) const{
-    const uint32_t k = frame.key();
-    return (min_id_ <= k && k <= max_id_) != invert_;
+    return (min_id_ <= frame && frame <= max_id_) != invert_;
   }
 private:
   const uint32_t min_id_;
@@ -48,19 +46,21 @@ private:
 
 class FilteredFrameListener : public CommInterface::FrameListener {
 public:
-  using FilterVector = std::vector<FrameFilterSharedPtr>;
+  typedef std::vector<FrameFilterSharedPtr> FilterVector;
   FilteredFrameListener(CommInterfaceSharedPtr comm, const Callable &callable, const FilterVector &filters)
   : CommInterface::FrameListener(callable),
     filters_(filters),
-    listener_(comm->createMsgListener([this](const Frame &frame) {
-        for(FilterVector::const_iterator it=this->filters_.begin(); it != this->filters_.end(); ++it) {
-          if((*it)->pass(frame)){
-            (*this)(frame);
-            break;
-          }
-        }
-    }))
+    listener_(comm->createMsgListener(Callable(this, &FilteredFrameListener::filter)))
   {}
+private:
+  void filter(const Frame &frame) {
+    for(FilterVector::const_iterator it=filters_.begin(); it != filters_.end(); ++it) {
+      if((*it)->pass(frame)){
+        (*this)(frame);
+        break;
+      }
+    }
+  }
   const std::vector<FrameFilterSharedPtr> filters_;
   CommInterface::FrameListenerConstSharedPtr listener_;
 };

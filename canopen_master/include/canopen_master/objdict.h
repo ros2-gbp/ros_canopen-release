@@ -1,15 +1,12 @@
 #ifndef H_OBJDICT
 #define H_OBJDICT
 
-#include <list>
-#include <memory>
-#include <unordered_map>
-#include <unordered_set>
-
-#include <socketcan_interface/delegates.h>
-
+#include <socketcan_interface/FastDelegate.h>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 #include <boost/thread/mutex.hpp>
-#include <functional>
+#include <boost/make_shared.hpp>
+#include <boost/function.hpp>
 #include <typeinfo>
 #include <vector>
 #include "exceptions.h"
@@ -102,7 +99,7 @@ struct DeviceInfo{
     uint32_t product_number;
     uint32_t revision_number;
     std::string order_code;
-    std::unordered_set<uint32_t> baudrates;
+    boost::unordered_set<uint32_t> baudrates;
     bool simple_boot_up_master;
     bool simple_boot_up_slave;
     uint8_t granularity;
@@ -111,7 +108,7 @@ struct DeviceInfo{
     uint16_t nr_of_rx_pdo;
     uint16_t nr_of_tx_pdo;
     bool lss_supported;
-    std::unordered_set<uint16_t> dummy_usage;
+    boost::unordered_set<uint16_t> dummy_usage;
 };
 
 #define THROW_WITH_KEY(e,k) BOOST_THROW_EXCEPTION(boost::enable_error_info(e) << ObjectDict::key_info(k))
@@ -186,7 +183,7 @@ public:
         const HoldAny & value() const { return !init_val.is_empty() ? init_val : def_val; }
 
     };
-    typedef std::shared_ptr<const Entry> EntryConstSharedPtr;
+    typedef boost::shared_ptr<const Entry> EntryConstSharedPtr;
 
     const Entry& operator()(uint16_t i) const{
         return *at(Key(i));
@@ -206,15 +203,13 @@ public:
     bool has(const Key &k) const{
         return dict_.find(k) != dict_.end();
     }
-
     bool insert(bool is_sub, EntryConstSharedPtr e){
-        return dict_.insert(std::make_pair(is_sub?Key(e->index,e->sub_index):Key(e->index),e)).second;
+        std::pair<boost::unordered_map<Key, EntryConstSharedPtr>::iterator, bool>  res = dict_.insert(std::make_pair(is_sub?Key(e->index,e->sub_index):Key(e->index),e));
+        return res.second;
     }
-
-    typedef std::unordered_map<Key, EntryConstSharedPtr, KeyHash>  ObjectDictMap;
-    bool iterate(ObjectDictMap::const_iterator &it) const;
+    bool iterate(boost::unordered_map<Key, EntryConstSharedPtr>::const_iterator &it) const;
     typedef std::list<std::pair<std::string, std::string> > Overlay;
-    typedef std::shared_ptr<ObjectDict> ObjectDictSharedPtr;
+    typedef boost::shared_ptr<ObjectDict> ObjectDictSharedPtr;
     static ObjectDictSharedPtr fromFile(const std::string &path, const Overlay &overlay = Overlay());
     const DeviceInfo device_info;
 
@@ -230,12 +225,11 @@ protected:
         }
     }
 
-    ObjectDictMap dict_;
+    boost::unordered_map<Key, EntryConstSharedPtr > dict_;
 };
 typedef ObjectDict::ObjectDictSharedPtr ObjectDictSharedPtr;
-typedef std::shared_ptr<const ObjectDict> ObjectDictConstSharedPtr;
+typedef boost::shared_ptr<const ObjectDict> ObjectDictConstSharedPtr;
 
-[[deprecated]]
 std::size_t hash_value(ObjectDict::Key const& k);
 
 template<typename T> class NodeIdOffset{
@@ -277,25 +271,18 @@ public:
 
 class ObjectStorage{
 public:
-    using ReadFunc = std::function<void(const ObjectDict::Entry&, String &)>;
-    using ReadDelegate [[deprecated("use ReadFunc instead")]] = can::DelegateHelper<ReadFunc>;
-
-    using WriteFunc = std::function<void(const ObjectDict::Entry&, const String &)>;
-    using WriteDelegate  [[deprecated("use WriteFunc instead")]] = can::DelegateHelper<WriteFunc>;
-
-    typedef std::shared_ptr<ObjectStorage> ObjectStorageSharedPtr;
+    typedef fastdelegate::FastDelegate2<const ObjectDict::Entry&, String &> ReadDelegate;
+    typedef fastdelegate::FastDelegate2<const ObjectDict::Entry&, const String &> WriteDelegate;
+    typedef boost::shared_ptr<ObjectStorage> ObjectStorageSharedPtr;
 
 protected:
-    class Data {
-        Data(const Data&) = delete; // prevent copies
-        Data& operator=(const Data&) = delete;
-
+    class Data: boost::noncopyable{
         boost::mutex mutex;
         String buffer;
         bool valid;
 
-        ReadFunc read_delegate;
-        WriteFunc write_delegate;
+        ReadDelegate read_delegate;
+        WriteDelegate write_delegate;
 
         template <typename T> T & access(){
             if(!valid){
@@ -316,22 +303,22 @@ protected:
         const ObjectDict::Key key;
         size_t size() { boost::mutex::scoped_lock lock(mutex); return buffer.size(); }
 
-        template<typename T> Data(const ObjectDict::Key &k, const ObjectDict::EntryConstSharedPtr &e, const T &val, const ReadFunc &r, const WriteFunc &w)
+        template<typename T> Data(const ObjectDict::Key &k, const ObjectDict::EntryConstSharedPtr &e, const T &val, const ReadDelegate &r, const WriteDelegate &w)
         : valid(false), read_delegate(r), write_delegate(w), type_guard(TypeGuard::create<T>()), entry(e), key(k){
-            assert(r);
-            assert(w);
+            assert(!r.empty());
+            assert(!w.empty());
             assert(e);
             allocate<T>() = val;
         }
-        Data(const ObjectDict::Key &k, const ObjectDict::EntryConstSharedPtr &e, const TypeGuard &t, const ReadFunc &r, const WriteFunc &w)
+        Data(const ObjectDict::Key &k, const ObjectDict::EntryConstSharedPtr &e, const TypeGuard &t, const ReadDelegate &r, const WriteDelegate &w)
         : valid(false), read_delegate(r), write_delegate(w), type_guard(t), entry(e), key(k){
-            assert(r);
-            assert(w);
+            assert(!r.empty());
+            assert(!w.empty());
             assert(e);
             assert(t.valid());
             buffer.resize(t.get_size());
         }
-        void set_delegates(const ReadFunc &r, const WriteFunc &w){
+        void set_delegates(const ReadDelegate &r, const WriteDelegate &w){
             boost::mutex::scoped_lock lock(mutex);
             if(r) read_delegate = r;
             if(w) write_delegate = w;
@@ -380,7 +367,7 @@ protected:
         void force_write();
 
     };
-    typedef std::shared_ptr<Data> DataSharedPtr;
+    typedef boost::shared_ptr<Data> DataSharedPtr;
 public:
     template<const uint16_t dt> struct DataType{
         typedef void type;
@@ -456,20 +443,19 @@ public:
     void reset();
 
 protected:
-    typedef std::unordered_map<ObjectDict::Key, DataSharedPtr, ObjectDict::KeyHash> ObjectStorageMap;
-    ObjectStorageMap storage_;
+    boost::unordered_map<ObjectDict::Key, DataSharedPtr > storage_;
     boost::mutex mutex_;
 
     void init_nolock(const ObjectDict::Key &key, const ObjectDict::EntryConstSharedPtr &entry);
 
-    ReadFunc read_delegate_;
-    WriteFunc write_delegate_;
-    size_t map(const ObjectDict::EntryConstSharedPtr &e, const ObjectDict::Key &key, const ReadFunc & read_delegate, const WriteFunc & write_delegate);
+    ReadDelegate read_delegate_;
+    WriteDelegate write_delegate_;
+    size_t map(const ObjectDict::EntryConstSharedPtr &e, const ObjectDict::Key &key, const ReadDelegate & read_delegate, const WriteDelegate & write_delegate);
 public:
     template<typename T> Entry<T> entry(const ObjectDict::Key &key){
         boost::mutex::scoped_lock lock(mutex_);
 
-        ObjectStorageMap::iterator it = storage_.find(key);
+        boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator it = storage_.find(key);
 
         if(it == storage_.end()){
             const ObjectDict::EntryConstSharedPtr e = dict_->get(key);
@@ -479,16 +465,16 @@ public:
 
             if(!e->def_val.is_empty()){
                 T val = NodeIdOffset<T>::apply(e->def_val, node_id_);
-                data = std::make_shared<Data>(key, e,val, read_delegate_, write_delegate_);
+                data = boost::make_shared<Data>(key, e,val, read_delegate_, write_delegate_);
             }else{
                 if(!e->def_val.type().valid() ||  e->def_val.type() == type) {
-                    data = std::make_shared<Data>(key,e,type, read_delegate_, write_delegate_);
+                    data = boost::make_shared<Data>(key,e,type, read_delegate_, write_delegate_);
                 }else{
                     THROW_WITH_KEY(std::bad_cast(), key);
                 }
             }
 
-            std::pair<ObjectStorageMap::iterator, bool>  ok = storage_.insert(std::make_pair(key, data));
+            std::pair<boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator, bool>  ok = storage_.insert(std::make_pair(key, data));
             it = ok.first;
         }
 
@@ -498,7 +484,7 @@ public:
         return Entry<T>(it->second);
     }
 
-    size_t map(uint16_t index, uint8_t sub_index, const ReadFunc & read_delegate, const WriteFunc & write_delegate);
+    size_t map(uint16_t index, uint8_t sub_index, const ReadDelegate & read_delegate, const WriteDelegate & write_delegate);
 
     template<typename T> Entry<T> entry(uint16_t index){
         return entry<T>(ObjectDict::Key(index));
@@ -521,15 +507,15 @@ public:
             return false;
         }
     }
-    typedef std::function<std::string()> ReadStringFuncType;
+    typedef boost::function<std::string()> ReadStringFuncType;
     ReadStringFuncType getStringReader(const ObjectDict::Key &key, bool cached = false);
-    typedef std::function<void(const std::string &)>  WriteStringFuncType;
+    typedef boost::function<void(const std::string &)>  WriteStringFuncType;
     WriteStringFuncType getStringWriter(const ObjectDict::Key &key, bool cached = false);
 
     const ObjectDictConstSharedPtr dict_;
     const uint8_t node_id_;
 
-    ObjectStorage(ObjectDictConstSharedPtr dict, uint8_t node_id, ReadFunc read_delegate, WriteFunc write_delegate);
+    ObjectStorage(ObjectDictConstSharedPtr dict, uint8_t node_id, ReadDelegate read_delegate, WriteDelegate write_delegate);
 
     void init(const ObjectDict::Key &key);
     void init_all();

@@ -2,36 +2,19 @@
 Changelog for package socketcan_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.8.2 (2019-11-04)
-------------------
-* enable rosconsole_bridge bindings
-* switch to new logging macros
-* add logging based on console_bridge
-* handle extended frame strings like candump
-* implement Frame::fullid()
-* removed implicit Header operator
-* move stream operators into can namespace
+0.7.12 (2019-11-04)
+-------------------
+
+0.7.11 (2019-07-14)
+-------------------
+
+0.7.10 (2019-03-18)
+-------------------
+* require minimum version of class_loader and pluginlib
 * Contributors: Mathias Lüdtke
 
-0.8.1 (2019-07-14)
+0.7.9 (2018-05-23)
 ------------------
-* Set C++ standard to c++14
-* implemented test for dispatcher
-* Replacing typedefs in socketcan_interface with using aliases.
-* added Delegate helpers for backwards compatibility
-* implemented create\*ListenerM helpers
-* Replacing FastDelegate with std::function and std::bind.
-* Contributors: Harsh Deshpande, Joshua Whitley, Mathias Lüdtke, pzzlr
-
-0.8.0 (2018-07-11)
-------------------
-* migrated to std::function and std::bind
-* got rid of boost::noncopyable
-* replaced BOOST_FOREACH
-* migrated to std::unordered_map and std::unordered_set
-* migrated to std:array
-* migrated to std pointers
-* removed deprecated types
 * introduced ROSCANOPEN_MAKE_SHARED
 * added c_array access functons to can::Frame
 * Contributors: Mathias Lüdtke

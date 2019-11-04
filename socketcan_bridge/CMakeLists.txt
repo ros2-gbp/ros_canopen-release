@@ -1,15 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(socketcan_bridge)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-
 find_package(catkin REQUIRED
   COMPONENTS
     can_msgs
-    rosconsole_bridge
     roscpp
     socketcan_interface
 )
@@ -22,7 +16,6 @@ catkin_package(
     topic_to_socketcan
   CATKIN_DEPENDS
     can_msgs
-    rosconsole_bridge
     roscpp
     socketcan_interface
 )
@@ -35,7 +28,6 @@ include_directories(
 
 # socketcan_to_topic
 add_library(socketcan_to_topic
-  src/rosconsole_bridge.cpp
   src/socketcan_to_topic.cpp
 )
 target_link_libraries(socketcan_to_topic
@@ -47,7 +39,6 @@ add_dependencies(socketcan_to_topic
 
 # topic_to_socketcan
 add_library(topic_to_socketcan
-  src/rosconsole_bridge.cpp
   src/topic_to_socketcan.cpp
 )
 target_link_libraries(topic_to_socketcan
@@ -109,7 +100,7 @@ if(CATKIN_ENABLE_TESTING)
   find_package(roslint REQUIRED)
 
   roslint_cpp()
-  roslint_add_test()
+  #for use with catkin_make roslint_socketcan_bridge
 
   # unit test for the can_msgs::Frame and can::Frame types.
   catkin_add_gtest(test_conversion

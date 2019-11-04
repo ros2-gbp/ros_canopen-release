@@ -58,12 +58,7 @@ public:
     void init();
 
     SDOClient(const can::CommInterfaceSharedPtr interface, const ObjectDictSharedPtr dict, uint8_t node_id)
-    : interface_(interface),
-      storage_(std::make_shared<ObjectStorage>(dict, node_id,
-                                               std::bind(&SDOClient::read, this, std::placeholders::_1, std::placeholders::_2),
-                                               std::bind(&SDOClient::write, this, std::placeholders::_1, std::placeholders::_2))
-              ),
-      reader_(false, 1)
+    : interface_(interface), storage_(boost::make_shared<ObjectStorage>(dict, node_id, ObjectStorage::ReadDelegate(this, &SDOClient::read), ObjectStorage::WriteDelegate(this, &SDOClient::write))), reader_(false, 1)
     {
     }
 };
@@ -87,7 +82,7 @@ class PDOMapper{
         bool empty;
         std::vector<char> buffer;
     };
-    typedef std::shared_ptr<Buffer> BufferSharedPtr;
+    typedef boost::shared_ptr<Buffer> BufferSharedPtr;
 
     class PDO {
     protected:
@@ -98,7 +93,7 @@ class PDOMapper{
     };
 
     struct TPDO: public PDO{
-        typedef std::shared_ptr<TPDO> TPDOSharedPtr;
+        typedef boost::shared_ptr<TPDO> TPDOSharedPtr;
         void sync();
         static TPDOSharedPtr create(const can::CommInterfaceSharedPtr interface, const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index){
             TPDOSharedPtr tpdo(new TPDO(interface));
@@ -115,7 +110,7 @@ class PDOMapper{
 
     struct RPDO : public PDO{
         void sync(LayerStatus &status);
-        typedef std::shared_ptr<RPDO> RPDOSharedPtr;
+        typedef boost::shared_ptr<RPDO> RPDOSharedPtr;
         static RPDOSharedPtr create(const can::CommInterfaceSharedPtr interface, const ObjectStorageSharedPtr &storage, const uint16_t &com_index, const uint16_t &map_index){
             RPDOSharedPtr rpdo(new RPDO(interface));
             if(!rpdo->init(storage, com_index, map_index))
@@ -133,8 +128,8 @@ class PDOMapper{
         int timeout;
     };
 
-    std::unordered_set<RPDO::RPDOSharedPtr> rpdos_;
-    std::unordered_set<TPDO::TPDOSharedPtr> tpdos_;
+    boost::unordered_set<RPDO::RPDOSharedPtr> rpdos_;
+    boost::unordered_set<TPDO::TPDOSharedPtr> tpdos_;
 
     const can::CommInterfaceSharedPtr interface_;
 
@@ -146,7 +141,7 @@ public:
 };
 
 class EMCYHandler : public Layer {
-    std::atomic<bool> has_error_;
+    boost::atomic<bool> has_error_;
     ObjectStorage::Entry<uint8_t> error_register_;
     ObjectStorage::Entry<uint8_t> num_errors_;
     can::FrameListenerConstSharedPtr emcy_listener_;
@@ -172,7 +167,7 @@ struct SyncProperties{
     const uint16_t period_ms_;
     const uint8_t overflow_;
     SyncProperties(const can::Header &h, const uint16_t  &p, const uint8_t &o) : header_(h), period_ms_(p), overflow_(o) {}
-    bool operator==(const SyncProperties &p) const { return p.header_.key() == header_.key() && p.overflow_ == overflow_ && p.period_ms_ == period_ms_; }
+    bool operator==(const SyncProperties &p) const { return p.header_ == (int) header_ && p.overflow_ == overflow_ && p.period_ms_ == period_ms_; }
 
 };
 
@@ -184,7 +179,7 @@ public:
     virtual  void removeNode(void * const ptr) = 0;
     virtual ~SyncCounter() {}
 };
-typedef std::shared_ptr<SyncCounter> SyncCounterSharedPtr;
+typedef boost::shared_ptr<SyncCounter> SyncCounterSharedPtr;
 
 class Node : public Layer{
 public:
@@ -205,13 +200,11 @@ public:
     bool reset_com();
     bool prepare();
 
-    using StateFunc = std::function<void(const State&)>;
-    using StateDelegate [[deprecated("use StateFunc instead")]] = can::DelegateHelper<StateFunc>;
-
-    typedef can::Listener<const StateFunc, const State&> StateListener;
+    typedef fastdelegate::FastDelegate1<const State&> StateDelegate;
+    typedef can::Listener<const StateDelegate, const State&> StateListener;
     typedef StateListener::ListenerConstSharedPtr StateListenerConstSharedPtr;
 
-    StateListenerConstSharedPtr addStateListener(const StateFunc & s){
+    StateListenerConstSharedPtr addStateListener(const StateDelegate & s){
         return state_dispatcher_.createListener(s);
     }
 
@@ -255,11 +248,11 @@ private:
     void setHeartbeatInterval() { if(heartbeat_.valid()) heartbeat_.set(heartbeat_.desc().value().get<uint16_t>()); }
     bool checkHeartbeat();
 };
-typedef std::shared_ptr<Node> NodeSharedPtr;
+typedef boost::shared_ptr<Node> NodeSharedPtr;
 
 template<typename T> class Chain{
 public:
-    typedef std::shared_ptr<T> MemberSharedPtr;
+    typedef boost::shared_ptr<T> MemberSharedPtr;
     void call(void (T::*func)(void)){
         typename std::vector<MemberSharedPtr>::iterator it = elements.begin();
         while(it != elements.end()){
@@ -306,17 +299,14 @@ class SyncLayer: public Layer, public SyncCounter{
 public:
     SyncLayer(const SyncProperties &p) : Layer("Sync layer"), SyncCounter(p) {}
 };
-typedef std::shared_ptr<SyncLayer> SyncLayerSharedPtr;
+typedef boost::shared_ptr<SyncLayer> SyncLayerSharedPtr;
 
-class Master{
-    Master(const Master&) = delete; // prevent copies
-    Master& operator=(const Master&) = delete;
+class Master: boost::noncopyable {
 public:
-    Master() = default;
     virtual SyncLayerSharedPtr getSync(const SyncProperties &properties) = 0;
     virtual ~Master() {}
 
-    typedef std::shared_ptr<Master> MasterSharedPtr;
+    typedef boost::shared_ptr<Master> MasterSharedPtr;
     class Allocator {
     public:
         virtual MasterSharedPtr allocate(const std::string &name, can::CommInterfaceSharedPtr interface) = 0;

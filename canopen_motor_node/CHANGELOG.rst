@@ -2,23 +2,19 @@
 Changelog for package canopen_motor_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.8.2 (2019-11-04)
-------------------
+0.7.12 (2019-11-04)
+-------------------
 
-0.8.1 (2019-07-14)
-------------------
-* Set C++ standard to c++14
+0.7.11 (2019-07-14)
+-------------------
 * inherit LimitsHandle from LimitsHandleBase
-* Contributors: Harsh Deshpande, Mathias Lüdtke
+* Contributors: Mathias Lüdtke
 
-0.8.0 (2018-07-11)
+0.7.10 (2019-03-18)
+-------------------
+
+0.7.9 (2018-05-23)
 ------------------
-* migrated to std::function and std::bind
-* use std::isnan
-* migrated to std::atomic
-* migrated to std::unordered_map and std::unordered_set
-* migrated to std pointers
-* removed deprecated types
 * introduced HandleLayerSharedPtr
 * Contributors: Mathias Lüdtke
 

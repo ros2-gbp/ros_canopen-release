@@ -2,6 +2,7 @@
 #include <socketcan_interface/string.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -74,8 +75,8 @@ void ObjectStorage::Data::reset(){
     }
 }
 
-bool ObjectDict::iterate(ObjectDict::ObjectDictMap::const_iterator &it) const{
-    if(it != ObjectDict::ObjectDictMap::const_iterator()){
+bool ObjectDict::iterate(boost::unordered_map<Key, EntryConstSharedPtr >::const_iterator &it) const{
+    if(it != boost::unordered_map<Key, EntryConstSharedPtr >::const_iterator()){
         ++it;
     }else it = dict_.begin();
     return it != dict_.end();
@@ -216,7 +217,7 @@ void parse_object(ObjectDictSharedPtr dict, boost::property_tree::iptree &pt, co
     boost::optional<boost::property_tree::iptree&> object =  pt.get_child_optional(name.substr(2));
     if(!object) return;
 
-    std::shared_ptr<ObjectDict::Entry> entry = std::make_shared<ObjectDict::Entry>();
+    boost::shared_ptr<ObjectDict::Entry> entry = boost::make_shared<ObjectDict::Entry>();
     try{
         entry->index = int_from_string<uint16_t>(name);
         entry->obj_code = ObjectDict::Code(int_from_string<uint16_t>(object->get<std::string>("ObjectType", boost::lexical_cast<std::string>((uint16_t)ObjectDict::VAR))));
@@ -230,7 +231,7 @@ void parse_object(ObjectDictSharedPtr dict, boost::property_tree::iptree &pt, co
         }else if(entry->obj_code == ObjectDict::ARRAY || entry->obj_code == ObjectDict::RECORD){
             uint8_t subs = read_integer<uint8_t>(*object, "CompactSubObj");
             if(subs){ // compact
-                dict->insert(true, std::make_shared<const canopen::ObjectDict::Entry>(entry->index, 0, ObjectDict::DEFTYPE_UNSIGNED8, "NrOfObjects", true, false, false, HoldAny(subs)));
+                dict->insert(true, boost::make_shared<const canopen::ObjectDict::Entry>(entry->index, 0, ObjectDict::DEFTYPE_UNSIGNED8, "NrOfObjects", true, false, false, HoldAny(subs)));
 
                 read_var(*entry, *object);
 
@@ -238,7 +239,7 @@ void parse_object(ObjectDictSharedPtr dict, boost::property_tree::iptree &pt, co
                     std::string subname = pt.get<std::string>(name.substr(2)+"Name." + boost::lexical_cast<std::string>((int)i),entry->desc + boost::lexical_cast<std::string>((int)i));
                     subname = pt.get<std::string>(name.substr(2)+"Denotation." + boost::lexical_cast<std::string>((int)i), subname);
 
-                    dict->insert(true, std::make_shared<const canopen::ObjectDict::Entry>(entry->index, i, entry->data_type, name, entry->readable, entry->writable, entry->mappable, entry->def_val,
+                    dict->insert(true, boost::make_shared<const canopen::ObjectDict::Entry>(entry->index, i, entry->data_type, name, entry->readable, entry->writable, entry->mappable, entry->def_val,
                        ReadAnyValue::read_value(pt, entry->data_type, name.substr(2)+"Value." + boost::lexical_cast<std::string>((int)i))));
                 }
             }else{
@@ -295,10 +296,10 @@ ObjectDictSharedPtr ObjectDict::fromFile(const std::string &path, const ObjectDi
     read_optional(info.nr_of_tx_pdo, di, "NrOfTXPDO");
     read_optional(info.lss_supported, di, "LSS_Supported");
 
-    std::unordered_set<uint32_t> baudrates;
-    std::unordered_set<uint16_t> dummy_usage;
+    boost::unordered_set<uint32_t> baudrates;
+    boost::unordered_set<uint16_t> dummy_usage;
 
-    for(boost::property_tree::iptree::value_type &v: di){
+    BOOST_FOREACH(boost::property_tree::iptree::value_type &v, di){
         if(v.first.find("BaudRate_") == 0){
             uint16_t rate = int_from_string<uint16_t>(v.first.substr(9));
             if(v.second.get_value<bool>())
@@ -307,7 +308,7 @@ ObjectDictSharedPtr ObjectDict::fromFile(const std::string &path, const ObjectDi
     }
 
     if(pt.count("DummyUsage")){
-        for(boost::property_tree::iptree::value_type &v: pt.get_child("DummyUsage")){
+        BOOST_FOREACH(boost::property_tree::iptree::value_type &v, pt.get_child("DummyUsage")){
             if(v.first.find("Dummy") == 0){
                 // std::cout << ("0x"+v.first.substr(5)) << std::endl;
                 uint16_t dummy = int_from_string<uint16_t>("0x"+v.first.substr(5));
@@ -317,7 +318,7 @@ ObjectDictSharedPtr ObjectDict::fromFile(const std::string &path, const ObjectDi
         }
     }
 
-    dict = std::make_shared<ObjectDict>(info);
+    dict = boost::make_shared<ObjectDict>(info);
 
     for(Overlay::const_iterator it= overlay.begin(); it != overlay.end(); ++it){
         pt.get_child(it->first).put("ParameterValue", it->second);
@@ -330,8 +331,8 @@ ObjectDictSharedPtr ObjectDict::fromFile(const std::string &path, const ObjectDi
     return dict;
 }
 
-size_t ObjectStorage::map(const ObjectDict::EntryConstSharedPtr &e, const ObjectDict::Key &key, const ReadFunc & read_delegate, const WriteFunc & write_delegate){
-    ObjectStorageMap::iterator it = storage_.find(key);
+size_t ObjectStorage::map(const ObjectDict::EntryConstSharedPtr &e, const ObjectDict::Key &key, const ReadDelegate & read_delegate, const WriteDelegate & write_delegate){
+    boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator it = storage_.find(key);
 
     if(it == storage_.end()){
 
@@ -342,9 +343,9 @@ size_t ObjectStorage::map(const ObjectDict::EntryConstSharedPtr &e, const Object
             THROW_WITH_KEY(std::bad_cast() , key);
         }
 
-        data = std::make_shared<Data>(key, e,e->def_val.type(),read_delegate_, write_delegate_);
+        data = boost::make_shared<Data>(key, e,e->def_val.type(),read_delegate_, write_delegate_);
 
-        std::pair<ObjectStorageMap::iterator, bool>  ok = storage_.insert(std::make_pair(key, data));
+        std::pair<boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator, bool>  ok = storage_.insert(std::make_pair(key, data));
         it = ok.first;
         it->second->reset();
 
@@ -363,7 +364,7 @@ size_t ObjectStorage::map(const ObjectDict::EntryConstSharedPtr &e, const Object
     return it->second->size();
 }
 
-size_t ObjectStorage::map(uint16_t index, uint8_t sub_index, const ReadFunc & read_delegate, const WriteFunc & write_delegate){
+size_t ObjectStorage::map(uint16_t index, uint8_t sub_index, const ReadDelegate & read_delegate, const WriteDelegate & write_delegate){
     boost::mutex::scoped_lock lock(mutex_);
 
     try{
@@ -380,21 +381,21 @@ size_t ObjectStorage::map(uint16_t index, uint8_t sub_index, const ReadFunc & re
     }
 }
 
-ObjectStorage::ObjectStorage(ObjectDictConstSharedPtr dict, uint8_t node_id, ReadFunc read_delegate, WriteFunc write_delegate)
+ObjectStorage::ObjectStorage(ObjectDictConstSharedPtr dict, uint8_t node_id, ReadDelegate read_delegate, WriteDelegate write_delegate)
 :read_delegate_(read_delegate), write_delegate_(write_delegate), dict_(dict), node_id_(node_id){
     assert(dict_);
-    assert(read_delegate_);
-    assert(write_delegate_);
+    assert(!read_delegate_.empty());
+    assert(!write_delegate_.empty());
 }
 
 void ObjectStorage::init_nolock(const ObjectDict::Key &key, const ObjectDict::EntryConstSharedPtr &entry){
 
     if(!entry->init_val.is_empty()){
-        ObjectStorageMap::iterator it = storage_.find(key);
+        boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator it = storage_.find(key);
 
         if(it == storage_.end()){
-            DataSharedPtr data = std::make_shared<Data>(key,entry, entry->init_val.type(), read_delegate_, write_delegate_);
-            std::pair<ObjectStorageMap::iterator, bool>  ok = storage_.insert(std::make_pair(key, data));
+            DataSharedPtr data = boost::make_shared<Data>(key,entry, entry->init_val.type(), read_delegate_, write_delegate_);
+            std::pair<boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator, bool>  ok = storage_.insert(std::make_pair(key, data));
             it = ok.first;
             if(!ok.second){
                 THROW_WITH_KEY(std::bad_alloc() , key);
@@ -410,7 +411,7 @@ void ObjectStorage::init(const ObjectDict::Key &key){
 void ObjectStorage::init_all(){
     boost::mutex::scoped_lock lock(mutex_);
 
-    ObjectDict::ObjectDictMap::const_iterator entry_it;
+    boost::unordered_map<ObjectDict::Key, ObjectDict::EntryConstSharedPtr >::const_iterator entry_it;
     while(dict_->iterate(entry_it)){
         init_nolock(entry_it->first, entry_it->second);
     }
@@ -418,7 +419,7 @@ void ObjectStorage::init_all(){
 
 void ObjectStorage::reset(){
     boost::mutex::scoped_lock lock(mutex_);
-    for(ObjectStorageMap::iterator it = storage_.begin(); it != storage_.end(); ++it){
+    for(boost::unordered_map<ObjectDict::Key, DataSharedPtr >::iterator it = storage_.begin(); it != storage_.end(); ++it){
         it->second->reset();
     }
 }
@@ -440,9 +441,9 @@ struct PrintValue {
         ObjectStorage::Entry<typename ObjectStorage::DataType<dt>::type> entry = storage.entry<typename ObjectStorage::DataType<dt>::type>(key);
         return formatValue<dt>(cached? entry.get_cached() : entry.get() );
     }
-    static std::function<std::string()> getReader(ObjectStorage& storage, const ObjectDict::Key &key, bool cached){
+    static boost::function<std::string()> getReader(ObjectStorage& storage, const ObjectDict::Key &key, bool cached){
         ObjectDict::DataTypes data_type = (ObjectDict::DataTypes) storage.dict_->get(key)->data_type;
-        return std::bind(branch_type<PrintValue, std::string (ObjectStorage&, const ObjectDict::Key &, bool)>(data_type),std::ref(storage), key, cached);
+        return boost::bind(branch_type<PrintValue, std::string (ObjectStorage&, const ObjectDict::Key &, bool)>(data_type),boost::ref(storage), key, cached);
     }
 };
 
@@ -462,14 +463,14 @@ struct WriteStringValue {
             entry.set(any.get<T>());
         }
     }
-    template<const ObjectDict::DataTypes dt> static std::function<void (const std::string&)> func(ObjectStorage& storage, const ObjectDict::Key &key, bool cached){
+    template<const ObjectDict::DataTypes dt> static boost::function<void (const std::string&)> func(ObjectStorage& storage, const ObjectDict::Key &key, bool cached){
         ObjectStorage::Entry<typename ObjectStorage::DataType<dt>::type> entry = storage.entry<typename ObjectStorage::DataType<dt>::type>(key);
         reader_type reader = branch_type<ReadAnyValue, HoldAny (boost::property_tree::iptree &, const std::string &)>(dt);
-        return std::bind(&WriteStringValue::write<typename ObjectStorage::DataType<dt>::type >, entry, cached, reader, std::placeholders::_1);
+        return boost::bind(&WriteStringValue::write<typename ObjectStorage::DataType<dt>::type >, entry, cached, reader, _1);
     }
-    static std::function<void (const std::string&)> getWriter(ObjectStorage& storage, const ObjectDict::Key &key, bool cached){
+    static boost::function<void (const std::string&)> getWriter(ObjectStorage& storage, const ObjectDict::Key &key, bool cached){
         ObjectDict::DataTypes data_type = (ObjectDict::DataTypes) storage.dict_->get(key)->data_type;
-        return branch_type<WriteStringValue,  std::function<void (const std::string&)> (ObjectStorage&, const ObjectDict::Key &, bool)>(data_type)(storage, key, cached);
+        return branch_type<WriteStringValue,  boost::function<void (const std::string&)> (ObjectStorage&, const ObjectDict::Key &, bool)>(data_type)(storage, key, cached);
     }
 };
 

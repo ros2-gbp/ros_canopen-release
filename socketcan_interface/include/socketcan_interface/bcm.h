@@ -7,14 +7,10 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
-
+ 
 #include <linux/can.h>
 #include <linux/can/bcm.h>
 #include <linux/can/error.h>
-
-#include <cstring>
-
-#include <boost/chrono.hpp>
 
 namespace can {
 
@@ -27,7 +23,7 @@ class BCMsocket{
         : size(sizeof(bcm_msg_head) + sizeof(can_frame)*n), data(new uint8_t[size])
         {
             assert(n<=256);
-            std::memset(data, 0, size);
+            memset(data, 0, size);
             head().nframes = n;
         }
         bcm_msg_head& head() {
@@ -58,7 +54,7 @@ public:
 
         if(s_ < 0 ) return false;
         struct ifreq ifr;
-        std::strcpy(ifr.ifr_name, device.c_str());
+        strcpy(ifr.ifr_name, device.c_str());
         int ret = ioctl(s_, SIOCGIFINDEX, &ifr);
 
         if(ret != 0){
