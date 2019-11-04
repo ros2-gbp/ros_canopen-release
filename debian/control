@@ -1,0 +1,12 @@
+Source: ros-melodic-ros-canopen
+Section: misc
+Priority: optional
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin
+Homepage: http://ros.org/wiki/ros_canopen
+Standards-Version: 3.9.2
+
+Package: ros-melodic-ros-canopen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-can-msgs, ros-melodic-canopen-402, ros-melodic-canopen-chain-node, ros-melodic-canopen-master, ros-melodic-canopen-motor-node, ros-melodic-socketcan-bridge, ros-melodic-socketcan-interface
+Description: A generic canopen implementation for ROS
