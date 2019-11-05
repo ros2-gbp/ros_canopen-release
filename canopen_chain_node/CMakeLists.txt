@@ -1,12 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(canopen_chain_node)
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
 find_package(catkin REQUIRED
   COMPONENTS
     canopen_master
     diagnostic_updater
     message_generation
     pluginlib
+    rosconsole_bridge
     roscpp
     roslib
     socketcan_interface
@@ -36,6 +42,7 @@ catkin_package(
     diagnostic_updater
     message_runtime
     pluginlib
+    rosconsole_bridge
     roscpp
     socketcan_interface
     std_srvs
@@ -52,6 +59,7 @@ include_directories(
 # canopen_ros_chain
 add_library(canopen_ros_chain
   src/ros_chain.cpp
+  src/rosconsole_bridge.cpp
 )
 target_link_libraries(canopen_ros_chain
   ${Boost_LIBRARIES}
@@ -74,6 +82,7 @@ target_link_libraries(${PROJECT_NAME}
 
 # canopen_sync_node
 add_executable(canopen_sync_node
+  src/rosconsole_bridge.cpp
   src/sync_node.cpp
 )
 target_link_libraries(canopen_sync_node

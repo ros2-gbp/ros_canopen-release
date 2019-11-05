@@ -1,27 +1,30 @@
 #ifndef H_CAN_DISPATCHER
 #define H_CAN_DISPATCHER
 
-#include <socketcan_interface/interface.h>
+#include <functional>
+#include <memory>
 #include <list>
+#include <unordered_map>
+
+#include <socketcan_interface/interface.h>
 #include <boost/thread/mutex.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/utility.hpp>
-#include <boost/foreach.hpp>
-#include <boost/weak_ptr.hpp>
 
 namespace can{
 
 template< typename Listener > class SimpleDispatcher{
 public:
-    typedef typename Listener::Callable Callable;
-    typedef typename Listener::Type Type;
-    typedef typename Listener::ListenerConstSharedPtr ListenerConstSharedPtr;
+    using Callable = typename Listener::Callable;
+    using Type = typename Listener::Type;
+    using ListenerConstSharedPtr = typename Listener::ListenerConstSharedPtr;
 protected:
     class DispatcherBase;
-    typedef boost::shared_ptr<DispatcherBase> DispatcherBaseSharedPtr;
-    class DispatcherBase : boost::noncopyable{
+    using DispatcherBaseSharedPtr = std::shared_ptr<DispatcherBase>;
+    class DispatcherBase {
+        DispatcherBase(const DispatcherBase&) = delete; // prevent copies
+        DispatcherBase& operator=(const DispatcherBase&) = delete;
+
         class GuardedListener: public Listener{
-            boost::weak_ptr<DispatcherBase> guard_;
+            std::weak_ptr<DispatcherBase> guard_;
         public:
             GuardedListener(DispatcherBaseSharedPtr g, const Callable &callable): Listener(callable), guard_(g){}
             virtual ~GuardedListener() {
@@ -74,9 +77,9 @@ public:
     operator Callable() { return Callable(this,&SimpleDispatcher::dispatch); }
 };
 
-template<typename K, typename Listener, typename Hash = boost::hash<K> > class FilteredDispatcher: public SimpleDispatcher<Listener>{
-    typedef SimpleDispatcher<Listener> BaseClass;
-    boost::unordered_map<K, typename BaseClass::DispatcherBaseSharedPtr, Hash> filtered_;
+template<typename K, typename Listener, typename Hash = std::hash<K> > class FilteredDispatcher: public SimpleDispatcher<Listener>{
+    using BaseClass = SimpleDispatcher<Listener>;
+    std::unordered_map<K, typename BaseClass::DispatcherBaseSharedPtr, Hash> filtered_;
 public:
     using BaseClass::createListener;
     typename BaseClass::ListenerConstSharedPtr createListener(const K &key, const typename BaseClass::Callable &callable){
@@ -85,12 +88,25 @@ public:
         if(!ptr) ptr.reset(new typename BaseClass::DispatcherBase(BaseClass::mutex_));
         return BaseClass::DispatcherBase::createListener(ptr, callable);
     }
-    void dispatch(const typename BaseClass::Type &obj){
+
+    template <typename T>
+    [[deprecated("provide key explicitly")]]
+    typename BaseClass::ListenerConstSharedPtr createListener(const T &key, const typename BaseClass::Callable &callable){
+        return createListener(static_cast<K>(key), callable);
+    }
+
+    void dispatch(const K &key, const typename BaseClass::Type &obj){
         boost::mutex::scoped_lock lock(BaseClass::mutex_);
-        typename BaseClass::DispatcherBaseSharedPtr &ptr = filtered_[obj];
+        typename BaseClass::DispatcherBaseSharedPtr &ptr = filtered_[key];
         if(ptr) ptr->dispatch_nolock(obj);
         BaseClass::dispatcher_->dispatch_nolock(obj);
     }
+
+    [[deprecated("provide key explicitly")]]
+    void dispatch(const typename BaseClass::Type &obj){
+        return dispatch(static_cast<K>(obj), obj);
+    }
+
     operator typename BaseClass::Callable() { return typename BaseClass::Callable(this,&FilteredDispatcher::dispatch); }
 };
 

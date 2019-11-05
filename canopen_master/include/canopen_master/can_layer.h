@@ -3,6 +3,7 @@
 
 #include <socketcan_interface/threading.h>
 #include "layer.h"
+#include <socketcan_interface/string.h>
 
 namespace canopen{
 
@@ -16,9 +17,9 @@ class CANLayer: public Layer{
     void handleFrame(const can::Frame & msg){
         boost::mutex::scoped_lock lock(mutex_);
         last_error_ = msg;
-        LOG("ID: " << msg.id);
+        ROSCANOPEN_ERROR("canopen_master", "Received error frame: " << msg);
     }
-    boost::shared_ptr<boost::thread> thread_;
+    std::shared_ptr<boost::thread> thread_;
 
 public:
     CANLayer(const can::DriverInterfaceSharedPtr &driver, const std::string &device, bool loopback)
@@ -61,7 +62,7 @@ public:
         }
 
     }
-    
+
     virtual void handleInit(LayerStatus &status){
 	if(thread_){
             status.warn("CAN thread already running");
@@ -71,8 +72,8 @@ public:
             can::StateWaiter waiter(driver_.get());
 
             thread_.reset(new boost::thread(&can::DriverInterface::run, driver_));
-            error_listener_ = driver_->createMsgListener(can::ErrorHeader(), can::CommInterface::FrameDelegate(this, &CANLayer::handleFrame));
-	    
+            error_listener_ = driver_->createMsgListenerM(can::ErrorHeader(),this, &CANLayer::handleFrame);
+
 	    if(!waiter.wait(can::State::ready, boost::posix_time::seconds(1))){
 		status.error("CAN init timed out");
 	    }
@@ -96,7 +97,7 @@ public:
     }
 
     virtual void handleHalt(LayerStatus &status) { /* nothing to do */ }
-    
+
     virtual void handleRecover(LayerStatus &status){
         if(!driver_->getState().isReady()){
             handleShutdown(status);

@@ -2,19 +2,26 @@
 Changelog for package socketcan_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.12 (2019-11-04)
--------------------
-
-0.7.11 (2019-07-14)
--------------------
-
-0.7.10 (2019-03-18)
--------------------
-* keep NodeHandle alive in socketcan_bridge tests
+0.8.2 (2019-11-04)
+------------------
+* fix roslint errors in socketcan_bridge
+* run roslint as part of run_tests
+* enable rosconsole_bridge bindings
 * Contributors: Mathias Lüdtke
 
-0.7.9 (2018-05-23)
+0.8.1 (2019-07-14)
 ------------------
+* Added configurable queue sizes
+* Set C++ standard to c++14
+* implemented create\*ListenerM helpers
+* Replacing FastDelegate with std::function and std::bind.
+* Contributors: Harsh Deshpande, JeremyZoss, Joshua Whitley, Mathias Lüdtke, rchristopher
+
+0.8.0 (2018-07-11)
+------------------
+* keep NodeHandle alive in socketcan_bridge tests
+* migrated to std::function and std::bind
+* migrated to std pointers
 * compare can_msgs::Frame and can::Frame properly
 * Contributors: Mathias Lüdtke
 

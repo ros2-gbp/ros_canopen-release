@@ -60,7 +60,7 @@ State402::InternalState State402::read(uint16_t sw) {
         break;
 
     default:
-        LOG("Motor is currently in an unknown state: " << std::hex <<  state << std::dec);
+        ROSCANOPEN_WARN("canopen_402", "Motor is currently in an unknown state: " << std::hex <<  state << std::dec);
     }
     boost::mutex::scoped_lock lock(mutex_);
     if(new_state != state_){
@@ -154,7 +154,7 @@ bool Command402::setTransition(uint16_t &cw, const State402::InternalState &from
         return true;
     }
     catch(...){
-        LOG("illegal tranistion " << from << " -> " << to);
+        ROSCANOPEN_WARN("canopen_402", "illegal tranistion " << from << " -> " << to);
     }
     return false;
 }
@@ -254,7 +254,7 @@ bool Motor402::enterModeAndWait(uint16_t mode) {
     LayerStatus s;
     bool okay = mode != MotorBase::Homing && switchMode(s, mode);
     if(!s.bounded<LayerStatus::Ok>()){
-        LOG("Could not switch to mode " << mode << ", reason: " << s.reason());
+        ROSCANOPEN_ERROR("canopen_402", "Could not switch to mode " << mode << ", reason: " << s.reason());
     }
     return okay;
 }
@@ -279,7 +279,7 @@ ModeSharedPtr Motor402::allocMode(uint16_t mode){
     ModeSharedPtr res;
     if(isModeSupportedByDevice(mode)){
         boost::mutex::scoped_lock map_lock(map_mutex_);
-        boost::unordered_map<uint16_t, ModeSharedPtr >::iterator it = modes_.find(mode);
+        std::unordered_map<uint16_t, ModeSharedPtr >::iterator it = modes_.find(mode);
         if(it != modes_.end()){
             res = it->second;
         }
@@ -468,7 +468,7 @@ void Motor402::handleDiag(LayerReport &report){
     }
 }
 void Motor402::handleInit(LayerStatus &status){
-    for(boost::unordered_map<uint16_t, AllocFuncType>::iterator it = mode_allocators_.begin(); it != mode_allocators_.end(); ++it){
+    for(std::unordered_map<uint16_t, AllocFuncType>::iterator it = mode_allocators_.begin(); it != mode_allocators_.end(); ++it){
         (it->second)();
     }
 

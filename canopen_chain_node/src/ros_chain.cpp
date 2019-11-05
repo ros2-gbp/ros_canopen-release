@@ -16,27 +16,47 @@
 
 namespace canopen {
 
-PublishFunc::FuncType PublishFunc::create(ros::NodeHandle &nh,  const std::string &name, canopen::NodeSharedPtr node, const std::string &key, bool force){
+template<typename Tpub, int dt>
+static PublishFuncType create(ros::NodeHandle &nh,  const std::string &name, ObjectStorageSharedPtr storage, const std::string &key, const bool force){
+    using data_type = typename ObjectStorage::DataType<dt>::type;
+    using entry_type = ObjectStorage::Entry<data_type>;
+
+    entry_type entry = storage->entry<data_type>(key);
+    if(!entry.valid()) return 0;
+
+    const ros::Publisher pub = nh.advertise<Tpub>(name, 1);
+
+    typedef const data_type(entry_type::*getter_type)(void);
+    const getter_type getter = force ? static_cast<getter_type>(&entry_type::get) : static_cast<getter_type>(&entry_type::get_cached);
+
+    return [force, pub, entry, getter] () mutable {
+        Tpub msg;
+        msg.data = (const typename Tpub::_data_type &) (entry.*getter)();
+        pub.publish(msg);
+    };
+}
+
+PublishFuncType createPublishFunc(ros::NodeHandle &nh,  const std::string &name, canopen::NodeSharedPtr node, const std::string &key, bool force){
     ObjectStorageSharedPtr s = node->getStorage();
 
     switch(ObjectDict::DataTypes(s->dict_->get(key)->data_type)){
-        case ObjectDict::DEFTYPE_INTEGER8:       return create< std_msgs::Int8    >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER8>::type>(key), force);
-        case ObjectDict::DEFTYPE_INTEGER16:      return create< std_msgs::Int16   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER16>::type>(key), force);
-        case ObjectDict::DEFTYPE_INTEGER32:      return create< std_msgs::Int32   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER32>::type>(key), force);
-        case ObjectDict::DEFTYPE_INTEGER64:      return create< std_msgs::Int64   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_INTEGER64>::type>(key), force);
+        case ObjectDict::DEFTYPE_INTEGER8:       return create< std_msgs::Int8,    ObjectDict::DEFTYPE_INTEGER8       >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_INTEGER16:      return create< std_msgs::Int16,   ObjectDict::DEFTYPE_INTEGER16      >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_INTEGER32:      return create< std_msgs::Int32,   ObjectDict::DEFTYPE_INTEGER32      >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_INTEGER64:      return create< std_msgs::Int64,   ObjectDict::DEFTYPE_INTEGER64      >(nh, name, s, key, force);
 
-        case ObjectDict::DEFTYPE_UNSIGNED8:      return create< std_msgs::UInt8   >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED8>::type>(key), force);
-        case ObjectDict::DEFTYPE_UNSIGNED16:     return create< std_msgs::UInt16  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED16>::type>(key), force);
-        case ObjectDict::DEFTYPE_UNSIGNED32:     return create< std_msgs::UInt32  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED32>::type>(key), force);
-        case ObjectDict::DEFTYPE_UNSIGNED64:     return create< std_msgs::UInt64  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNSIGNED64>::type>(key), force);
+        case ObjectDict::DEFTYPE_UNSIGNED8:      return create< std_msgs::UInt8,   ObjectDict::DEFTYPE_UNSIGNED8      >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_UNSIGNED16:     return create< std_msgs::UInt16,  ObjectDict::DEFTYPE_UNSIGNED16     >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_UNSIGNED32:     return create< std_msgs::UInt32,  ObjectDict::DEFTYPE_UNSIGNED32     >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_UNSIGNED64:     return create< std_msgs::UInt64,  ObjectDict::DEFTYPE_UNSIGNED64     >(nh, name, s, key, force);
 
-        case ObjectDict::DEFTYPE_REAL32:         return create< std_msgs::Float32 >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_REAL32>::type>(key), force);
-        case ObjectDict::DEFTYPE_REAL64:         return create< std_msgs::Float64 >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_REAL64>::type>(key), force);
+        case ObjectDict::DEFTYPE_REAL32:         return create< std_msgs::Float32, ObjectDict::DEFTYPE_REAL32         >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_REAL64:         return create< std_msgs::Float64, ObjectDict::DEFTYPE_REAL64         >(nh, name, s, key, force);
 
-        case ObjectDict::DEFTYPE_VISIBLE_STRING: return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_VISIBLE_STRING>::type>(key), force);
-        case ObjectDict::DEFTYPE_OCTET_STRING:   return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_DOMAIN>::type>(key), force);
-        case ObjectDict::DEFTYPE_UNICODE_STRING: return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_UNICODE_STRING>::type>(key), force);
-        case ObjectDict::DEFTYPE_DOMAIN:         return create< std_msgs::String  >(nh, name, s->entry<ObjectStorage::DataType<ObjectDict::DEFTYPE_DOMAIN>::type>(key), force);
+        case ObjectDict::DEFTYPE_VISIBLE_STRING: return create< std_msgs::String,  ObjectDict::DEFTYPE_VISIBLE_STRING >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_OCTET_STRING:   return create< std_msgs::String,  ObjectDict::DEFTYPE_DOMAIN         >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_UNICODE_STRING: return create< std_msgs::String,  ObjectDict::DEFTYPE_UNICODE_STRING >(nh, name, s, key, force);
+        case ObjectDict::DEFTYPE_DOMAIN:         return create< std_msgs::String,  ObjectDict::DEFTYPE_DOMAIN         >(nh, name, s, key, force);
 
         default: return 0;
     }
@@ -70,8 +90,48 @@ void RosChain::run(){
     }
 }
 
+template <typename T> class ResponseLogger {
+protected:
+    bool logged;
+    const T& res;
+    const std::string command;
+public:
+    ResponseLogger(const T& res, const std::string &command) : logged(false), res(res), command(command){}
+    ~ResponseLogger() {
+        if(!logged && !res.success){
+            if (res.message.empty()){
+                ROS_ERROR_STREAM(command << " failed");
+            }else{
+                ROS_ERROR_STREAM(command << " failed: " << res.message);
+            }
+            logged = true;
+        }
+    }
+};
+
+class TriggerResponseLogger: public ResponseLogger<std_srvs::Trigger::Response> {
+public:
+    TriggerResponseLogger(const std_srvs::Trigger::Response& res, const std::string &command) : ResponseLogger(res, command){
+        ROS_INFO_STREAM(command << "...");
+    }
+    void logWarning() {
+        ROS_WARN_STREAM(command << " successful with warning(s): " << res.message);
+        logged = true;
+    }
+    ~TriggerResponseLogger() {
+        if(!logged && res.success){
+            if (res.message.empty()){
+                ROS_INFO_STREAM(command << " successful");
+            }else{
+                ROS_INFO_STREAM(command << " successful: " << res.message);
+            }
+            logged = true;
+        }
+    }
+};
+
 bool RosChain::handle_init(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
-    ROS_INFO("Initializing XXX");
+    TriggerResponseLogger rl(res, "Initializing");
     boost::mutex::scoped_lock lock(mutex_);
     if(getLayerState() > Off){
         res.success = true;
@@ -105,11 +165,10 @@ bool RosChain::handle_init(std_srvs::Trigger::Request  &req, std_srvs::Trigger::
 
     res.success = false;
     shutdown(status);
-
     return true;
 }
 bool RosChain::handle_recover(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
-    ROS_INFO("Recovering XXX");
+    TriggerResponseLogger rl(res, "Recovering");
     boost::mutex::scoped_lock lock(mutex_);
     res.success = false;
 
@@ -124,6 +183,7 @@ bool RosChain::handle_recover(std_srvs::Trigger::Request  &req, std_srvs::Trigge
             }
             res.success = status.bounded<LayerStatus::Warn>();
             res.message = status.reason();
+            if(status.equals<LayerStatus::Warn>()) rl.logWarning();
         }
         catch( const std::exception &e){
             std::string info = boost::diagnostic_information(e);
@@ -142,7 +202,7 @@ bool RosChain::handle_recover(std_srvs::Trigger::Request  &req, std_srvs::Trigge
 void RosChain::handleWrite(LayerStatus &status, const LayerState &current_state) {
     LayerStack::handleWrite(status, current_state);
     if(current_state > Shutdown){
-        for(std::vector<PublishFunc::FuncType>::iterator it = publishers_.begin(); it != publishers_.end(); ++it) (*it)();
+        for(const PublishFuncType& func: publishers_) func();
     }
 }
 
@@ -159,7 +219,7 @@ void RosChain::handleShutdown(LayerStatus &status){
 }
 
 bool RosChain::handle_shutdown(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
-    ROS_INFO("Shuting down XXX");
+    TriggerResponseLogger rl(res, "Shutting down");
     boost::mutex::scoped_lock lock(mutex_);
     res.success = true;
     if(getLayerState() > Init){
@@ -173,7 +233,7 @@ bool RosChain::handle_shutdown(std_srvs::Trigger::Request  &req, std_srvs::Trigg
 }
 
 bool RosChain::handle_halt(std_srvs::Trigger::Request  &req, std_srvs::Trigger::Response &res){
-    ROS_INFO("Halting down XXX");
+    TriggerResponseLogger rl(res, "Halting down");
     boost::mutex::scoped_lock lock(mutex_);
      res.success = true;
      if(getLayerState() > Init){
@@ -186,6 +246,7 @@ bool RosChain::handle_halt(std_srvs::Trigger::Request  &req, std_srvs::Trigger::
 }
 
 bool RosChain::handle_get_object(canopen_chain_node::GetObject::Request  &req, canopen_chain_node::GetObject::Response &res){
+    ResponseLogger<canopen_chain_node::GetObject::Response> rl(res, "Getting object " + req.node);
     std::map<std::string, canopen::NodeSharedPtr >::iterator it = nodes_lookup_.find(req.node);
     if(it == nodes_lookup_.end()){
         res.message = "node not found";
@@ -201,6 +262,7 @@ bool RosChain::handle_get_object(canopen_chain_node::GetObject::Request  &req, c
 }
 
 bool RosChain::handle_set_object(canopen_chain_node::SetObject::Request  &req, canopen_chain_node::SetObject::Response &res){
+    ResponseLogger<canopen_chain_node::SetObject::Response> rl(res, "Setting object " + req.node);
     std::map<std::string, canopen::NodeSharedPtr >::iterator it = nodes_lookup_.find(req.node);
     if(it == nodes_lookup_.end()){
         res.message = "node not found";
@@ -240,7 +302,7 @@ bool RosChain::setup_bus(){
         return false;
     }
 
-    state_listener_ = interface_->createStateListener(can::StateInterface::StateDelegate(this, &RosChain::logState));
+    state_listener_ = interface_->createStateListenerM(this, &RosChain::logState);
 
     if(bus_nh.getParam("master_type",master_alloc)){
         ROS_ERROR("please migrate to master allocators");
@@ -263,7 +325,7 @@ bool RosChain::setup_bus(){
         return false;
     }
 
-    add(boost::make_shared<CANLayer>(interface_, can_device, loopback));
+    add(std::make_shared<CANLayer>(interface_, can_device, loopback));
 
     return true;
 }
@@ -341,7 +403,7 @@ bool RosChain::setup_heartbeat(){
 
         hb_sender_.interface = interface_;
 
-        heartbeat_timer_.start(Timer::TimerDelegate(&hb_sender_, &HeartbeatSender::send) , boost::chrono::duration<double>(1.0/rate), false);
+        heartbeat_timer_.start(std::bind(&HeartbeatSender::send, &hb_sender_), boost::chrono::duration<double>(1.0/rate), false);
 
         return true;
 
@@ -464,9 +526,9 @@ bool RosChain::setup_nodes(){
             ROS_ERROR_STREAM("EDS '" << eds << "' could not be parsed");
             return false;
         }
-        canopen::NodeSharedPtr node = boost::make_shared<canopen::Node>(interface_, dict, node_id, sync_);
+        canopen::NodeSharedPtr node = std::make_shared<canopen::Node>(interface_, dict, node_id, sync_);
 
-        LoggerSharedPtr logger = boost::make_shared<Logger>(node);
+        LoggerSharedPtr logger = std::make_shared<Logger>(node);
 
         if(!nodeAdded(merged, node, logger)) return false;
 
@@ -475,7 +537,7 @@ bool RosChain::setup_nodes(){
         if(!addLoggerEntries(merged, "log_error", diagnostic_updater::DiagnosticStatusWrapper::ERROR, *logger)) return false;
 
         loggers_.push_back(logger);
-        diag_updater_.add(it->first, boost::bind(&Logger::log, logger, _1));
+        diag_updater_.add(it->first, std::bind(&Logger::log, logger, std::placeholders::_1));
 
         std::string node_name = std::string(merged["name"]);
 
@@ -485,7 +547,7 @@ bool RosChain::setup_nodes(){
                 for(int i = 0; i < objs.size(); ++i){
                     std::pair<std::string, bool> obj_name = parseObjectName(objs[i]);
 
-                    PublishFunc::FuncType pub = PublishFunc::create(nh_, node_name +"_"+obj_name.first, node, obj_name.first, obj_name.second);
+                    PublishFuncType pub = createPublishFunc(nh_, node_name +"_"+obj_name.first, node, obj_name.first, obj_name.second);
                     if(!pub){
                         ROS_ERROR_STREAM("Could not create publisher for '" << obj_name.first << "'");
                         return false;
@@ -501,7 +563,7 @@ bool RosChain::setup_nodes(){
         nodes_->add(node);
         nodes_lookup_.insert(std::make_pair(node_name, node));
 
-        boost::shared_ptr<canopen::EMCYHandler> emcy = boost::make_shared<canopen::EMCYHandler>(interface_, node->getStorage());
+        std::shared_ptr<canopen::EMCYHandler> emcy = std::make_shared<canopen::EMCYHandler>(interface_, node->getStorage());
         emcy_handlers_->add(emcy);
         logger->add(emcy);
 
@@ -516,7 +578,7 @@ void RosChain::report_diagnostics(diagnostic_updater::DiagnosticStatusWrapper &s
     boost::mutex::scoped_lock lock(diag_mutex_);
     LayerReport r;
     if(getLayerState() == Off){
-        stat.summary(stat.WARN,"Not initailized");
+        stat.summary(stat.WARN,"Not initialized");
     }else if(!running_){
         stat.summary(stat.ERROR,"Thread is not running");
     }else{
@@ -553,7 +615,7 @@ bool RosChain::setup_chain(){
     diag_updater_.setHardwareID(hw_id);
     diag_updater_.add("chain", this, &RosChain::report_diagnostics);
 
-    diag_timer_ = nh_.createTimer(ros::Duration(diag_updater_.getPeriod()/2.0),boost::bind(&diagnostic_updater::Updater::update, &diag_updater_));
+    diag_timer_ = nh_.createTimer(ros::Duration(diag_updater_.getPeriod()/2.0),std::bind(&diagnostic_updater::Updater::update, &diag_updater_));
 
     ros::NodeHandle nh_driver(nh_, "driver");
 
@@ -573,7 +635,7 @@ RosChain::~RosChain(){
         LayerStatus s;
         halt(s);
         shutdown(s);
-    }catch(...){ LOG("CATCH"); }
+    }catch(...){ ROS_ERROR("CATCH"); }
 }
 
 }

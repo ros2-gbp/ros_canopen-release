@@ -1,6 +1,8 @@
 #ifndef SOCKETCAN_INTERFACE_DUMMY_H
 #define SOCKETCAN_INTERFACE_DUMMY_H
 
+#include <unordered_map>
+
 #include "interface.h"
 #include "dispatcher.h"
 #include "string.h"
@@ -9,9 +11,9 @@
 namespace can{
 
 class DummyInterface : public DriverInterface{
-    typedef FilteredDispatcher<const unsigned int, CommInterface::FrameListener> FrameDispatcher;
-    typedef SimpleDispatcher<StateInterface::StateListener> StateDispatcher;
-    typedef boost::unordered_multimap<std::string, Frame> Map;
+    using FrameDispatcher = FilteredDispatcher<unsigned int, CommInterface::FrameListener>;
+    using StateDispatcher = SimpleDispatcher<StateInterface::StateListener>;
+    using Map = std::unordered_map<std::string, Frame>;
     FrameDispatcher frame_dispatcher_;
     StateDispatcher state_dispatcher_;
     State state_;
@@ -41,11 +43,11 @@ public:
         return add(k, toframe(v), multi);
     }
     virtual bool send(const Frame & msg){
-        if(loopback_) frame_dispatcher_.dispatch(msg);
+        if(loopback_) frame_dispatcher_.dispatch(msg.key(), msg);
         try{
             std::pair <Map::iterator, Map::iterator> r = map_.equal_range(tostring(msg, true));
             for (Map::iterator it=r.first; it!=r.second; ++it){
-                frame_dispatcher_.dispatch(it->second);
+                frame_dispatcher_.dispatch(it->second.key(), it->second);
             }
         }
         catch(const std::out_of_range &e){
@@ -53,11 +55,11 @@ public:
         return true;
     }
 
-    virtual FrameListenerConstSharedPtr createMsgListener(const FrameDelegate &delegate){
+    virtual FrameListenerConstSharedPtr createMsgListener(const FrameFunc &delegate){
         return frame_dispatcher_.createListener(delegate);
     }
-    virtual FrameListenerConstSharedPtr createMsgListener(const Frame::Header&h , const FrameDelegate &delegate){
-        return frame_dispatcher_.createListener(h, delegate);
+    virtual FrameListenerConstSharedPtr createMsgListener(const Frame::Header&h , const FrameFunc &delegate){
+        return frame_dispatcher_.createListener(h.key(), delegate);
     }
 
     // methods from StateInterface
@@ -87,12 +89,12 @@ public:
         return true;
     };
 
-    virtual StateListenerConstSharedPtr createStateListener(const StateDelegate &delegate){
+    virtual StateListenerConstSharedPtr createStateListener(const StateFunc &delegate){
       return state_dispatcher_.createListener(delegate);
     };
 
 };
-typedef boost::shared_ptr<DummyInterface> DummyInterfaceSharedPtr;
+using DummyInterfaceSharedPtr = std::shared_ptr<DummyInterface>;
 
 
 }

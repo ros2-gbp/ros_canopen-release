@@ -13,7 +13,10 @@
 #include <linux/can/raw.h>
 #include <linux/can/error.h>
 
+#include <cstring>
+
 #include <socketcan_interface/dispatcher.h>
+#include <socketcan_interface/string.h>
 
 namespace can {
 
@@ -149,7 +152,7 @@ public:
             ret = true;
         }
         if( internal_error & CAN_ERR_RESTARTED){
-            str += "ontroller restarted;";
+            str += "controller restarted;";
             ret = true;
         }
         return ret;
@@ -180,7 +183,7 @@ protected:
         boost::system::error_code ec;
         boost::asio::write(socket_, boost::asio::buffer(&frame, sizeof(frame)),boost::asio::transfer_all(), ec);
         if(ec){
-            LOG("FAILED " << ec);
+            ROSCANOPEN_ERROR("socketcan_interface", "FAILED " << ec);
             setErrorCode(ec);
             setNotReady();
             return false;
@@ -200,7 +203,7 @@ protected:
                 input_.id = frame_.can_id & CAN_EFF_MASK;
                 input_.is_error = 1;
 
-                LOG("error: " << input_.id);
+                ROSCANOPEN_ERROR("socketcan_interface", "internal error: " << input_.id);
                 setInternalError(input_.id);
                 setNotReady();
 
@@ -218,13 +221,13 @@ private:
     boost::mutex send_mutex_;
 };
 
-typedef SocketCANInterface SocketCANDriver;
-typedef boost::shared_ptr<SocketCANDriver> SocketCANDriverSharedPtr;
-typedef boost::shared_ptr<SocketCANInterface> SocketCANInterfaceSharedPtr;
+using SocketCANDriver = SocketCANInterface;
+using SocketCANDriverSharedPtr = std::shared_ptr<SocketCANDriver>;
+using SocketCANInterfaceSharedPtr = std::shared_ptr<SocketCANInterface>;
 
 template <typename T> class ThreadedInterface;
-typedef ThreadedInterface<SocketCANInterface> ThreadedSocketCANInterface;
-typedef boost::shared_ptr<ThreadedSocketCANInterface> ThreadedSocketCANInterfaceSharedPtr;
+using ThreadedSocketCANInterface = ThreadedInterface<SocketCANInterface>;
+using ThreadedSocketCANInterfaceSharedPtr = std::shared_ptr<ThreadedSocketCANInterface>;
 
 
 } // namespace can
