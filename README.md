@@ -1,3 +1,26 @@
+## ros_canopen (eloquent) - 2.0.0-1
+
+The packages in the `ros_canopen` repository were released into the `eloquent` distro by running `/usr/bin/bloom-release ros_canopen --rosdistro eloquent` on `Tue, 05 Nov 2019 12:46:38 -0000`
+
+The `can_msgs` package was released.
+
+Version of package(s) in repository `ros_canopen`:
+
+- upstream repository: https://github.com/ros-industrial/ros_canopen.git
+- release repository: unknown
+- rosdistro version: `null`
+- old version: `null`
+- new version: `2.0.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.0`
+- catkin_pkg version: `0.4.14`
+- rosdep version: `0.17.1`
+- rosdistro version: `0.7.5`
+- vcstools version: `0.1.42`
+
+
 ## ros_canopen (dashing) - 2.0.0-1
 
 The packages in the `ros_canopen` repository were released into the `dashing` distro by running `/usr/bin/bloom-release ros_canopen --rosdistro dashing` on `Tue, 05 Nov 2019 09:20:36 -0000`
