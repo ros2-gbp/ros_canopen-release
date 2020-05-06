@@ -1,4 +1,4 @@
-std_msgs/Header header
+Header header
 uint32 id
 bool is_rtr
 bool is_extended
