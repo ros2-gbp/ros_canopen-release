@@ -1,3 +1,34 @@
+## ros_canopen (noetic) - 0.8.4-1
+
+The packages in the `ros_canopen` repository were released into the `noetic` distro by running `/usr/bin/bloom-release ros_canopen --rosdistro noetic` on `Sat, 22 Aug 2020 10:50:57 -0000`
+
+These packages were released:
+- `can_msgs`
+- `canopen_402`
+- `canopen_chain_node`
+- `canopen_master`
+- `canopen_motor_node`
+- `ros_canopen`
+- `socketcan_bridge`
+- `socketcan_interface`
+
+Version of package(s) in repository `ros_canopen`:
+
+- upstream repository: https://github.com/ros-industrial/ros_canopen.git
+- release repository: https://github.com/ros-industrial-release/ros_canopen-release.git
+- rosdistro version: `0.8.3-1`
+- old version: `0.8.3-1`
+- new version: `0.8.4-1`
+
+Versions of tools used:
+
+- bloom version: `0.9.7`
+- catkin_pkg version: `0.4.22`
+- rosdep version: `0.19.0`
+- rosdistro version: `0.8.2`
+- vcstools version: `0.1.42`
+
+
 ## ros_canopen (melodic) - 0.8.4-1
 
 The packages in the `ros_canopen` repository were released into the `melodic` distro by running `/usr/bin/bloom-release ros_canopen --rosdistro melodic` on `Sat, 22 Aug 2020 10:39:46 -0000`
