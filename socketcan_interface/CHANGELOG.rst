@@ -2,6 +2,11 @@
 Changelog for package socketcan_interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.13 (2020-08-22)
+-------------------
+* do not print ERROR in candump
+* Contributors: Mathias Lüdtke
+
 0.7.12 (2019-11-04)
 -------------------
 
