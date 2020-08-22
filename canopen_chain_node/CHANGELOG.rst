@@ -2,36 +2,23 @@
 Changelog for package canopen_chain_node
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.8.3 (2020-05-07)
-------------------
-* Bump CMake version to avoid CMP0048 warning
-  Signed-off-by: ahcorde <ahcorde@gmail.com>
-* Contributors: ahcorde
+0.7.13 (2020-08-22)
+-------------------
 
-0.8.2 (2019-11-04)
-------------------
-* rename to logWarning to fix build on Debian stretch
-* log the result of all services in RosChain
-* enable rosconsole_bridge bindings
-* switch to new logging macros
-* Contributors: Mathias Lüdtke
+0.7.12 (2019-11-04)
+-------------------
 
-0.8.1 (2019-07-14)
-------------------
-* Set C++ standard to c++14
-* implemented create\*ListenerM helpers
-* Replacing FastDelegate with std::function and std::bind.
-* Contributors: Alexander Gutenkunst, Harsh Deshpande, Joshua Whitley, Mathias Lüdtke
+0.7.11 (2019-07-14)
+-------------------
 
-0.8.0 (2018-07-11)
-------------------
-* migrated to std::function and std::bind
+0.7.10 (2019-03-18)
+-------------------
+* require minimum version of class_loader and pluginlib
 * make sync_node return proper error codes
-* refactored PublishFunc
-* migrated to std::atomic
-* migrated to std pointers
-* removed deprecated types
 * Contributors: Mathias Lüdtke
+
+0.7.9 (2018-05-23)
+------------------
 
 0.7.8 (2018-05-04)
 ------------------

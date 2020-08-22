@@ -4,15 +4,16 @@
 
 #include <string>
 #include <list>
-#include <memory>
-
-#include <functional>
+#include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 #include "muParser.h"
+#include <boost/math/special_functions/fpclassify.hpp> // for isnan
 
 namespace canopen {
 class UnitConverter{
 public:
-    typedef std::function<double * (const std::string &) > GetVarFuncType;
+    typedef boost::function<double * (const std::string &) > get_var_func_type __attribute__((deprecated));
+    typedef boost::function<double * (const std::string &) > GetVarFuncType;
 
     UnitConverter(const std::string &expression, GetVarFuncType var_func)
     : var_func_(var_func)
@@ -38,7 +39,7 @@ public:
     }
     double evaluate() { int num; return parser_.Eval(num)[0]; }
 private:
-    typedef std::shared_ptr<double> variable_ptr;
+    typedef boost::shared_ptr<double> variable_ptr;
     typedef std::list<variable_ptr> variable_ptr_list;
 
     static double* createVariable(const char *name, void * userdata) {
@@ -67,8 +68,8 @@ private:
         return val;
     }
     static double smooth(double val, double old_val, double alpha){
-        if(std::isnan(val)) return 0;
-        if(std::isnan(old_val)) return val;
+        if(boost::math::isnan(val)) return 0;
+        if(boost::math::isnan(old_val)) return val;
         return alpha*val + (1.0-alpha)*old_val;
     }
     static double avg(const double *vals, int num)
@@ -77,7 +78,7 @@ private:
         int i=0;
         for (; i<num; ++i){
             const double &val = vals[i];
-            if(std::isnan(val)) break;
+            if(boost::math::isnan(val)) break;
             s += val;
         }
         return s / double(i+1);

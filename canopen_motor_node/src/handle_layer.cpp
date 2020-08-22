@@ -9,8 +9,8 @@ template<typename T > class LimitsHandle : public LimitsHandleBase {
     T limits_handle_;
 public:
     LimitsHandle(const T &handle) : limits_handle_(handle) {}
-    virtual void enforce(const ros::Duration &period) override { limits_handle_.enforceLimits(period); }
-    virtual void reset() override {}
+    virtual void enforce(const ros::Duration &period) { limits_handle_.enforceLimits(period); }
+    virtual void reset() {}
 };
 
 template<> void LimitsHandle<joint_limits_interface::PositionJointSaturationHandle>::reset() { limits_handle_.reset(); }
@@ -47,13 +47,13 @@ HandleLayer::HandleLayer(const std::string &name, const MotorBaseSharedPtr & mot
    if(options.hasMember("eff_to_device")) e2d = (const std::string&) options["eff_to_device"];
    if(options.hasMember("eff_from_device")) e2r = (const std::string&) options["eff_from_device"];
 
-   conv_target_pos_.reset(new UnitConverter(p2d, std::bind(assignVariable, "pos", &cmd_pos_, std::placeholders::_1)));
-   conv_target_vel_.reset(new UnitConverter(v2d, std::bind(assignVariable, "vel", &cmd_vel_, std::placeholders::_1)));
-   conv_target_eff_.reset(new UnitConverter(e2d, std::bind(assignVariable, "eff", &cmd_eff_, std::placeholders::_1)));
+   conv_target_pos_.reset(new UnitConverter(p2d, boost::bind(assignVariable, "pos", &cmd_pos_, _1)));
+   conv_target_vel_.reset(new UnitConverter(v2d, boost::bind(assignVariable, "vel", &cmd_vel_, _1)));
+   conv_target_eff_.reset(new UnitConverter(e2d, boost::bind(assignVariable, "eff", &cmd_eff_, _1)));
 
-   conv_pos_.reset(new UnitConverter(p2r, std::bind(&ObjectVariables::getVariable, &variables_, std::placeholders::_1)));
-   conv_vel_.reset(new UnitConverter(v2r, std::bind(&ObjectVariables::getVariable, &variables_, std::placeholders::_1)));
-   conv_eff_.reset(new UnitConverter(e2r, std::bind(&ObjectVariables::getVariable, &variables_, std::placeholders::_1)));
+   conv_pos_.reset(new UnitConverter(p2r, boost::bind(&ObjectVariables::getVariable, &variables_, _1)));
+   conv_vel_.reset(new UnitConverter(v2r, boost::bind(&ObjectVariables::getVariable, &variables_, _1)));
+   conv_eff_.reset(new UnitConverter(e2r, boost::bind(&ObjectVariables::getVariable, &variables_, _1)));
 }
 
 HandleLayer::CanSwitchResult HandleLayer::canSwitch(const MotorBase::OperationMode &m){
@@ -92,7 +92,7 @@ bool HandleLayer::forwardForMode(const MotorBase::OperationMode &m){
 
 
 template<typename T> void addLimitsHandle(std::vector<LimitsHandleBaseSharedPtr> &limits, const T &t) {
-    LimitsHandleBaseSharedPtr p = std::make_shared<LimitsHandle<T>>(t);
+    LimitsHandleBaseSharedPtr p = boost::make_shared<LimitsHandle<T> >(t);
     limits.push_back(p);
 }
 

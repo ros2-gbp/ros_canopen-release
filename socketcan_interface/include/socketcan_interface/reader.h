@@ -21,7 +21,7 @@ class BufferedReader {
     void trim(){
         if(max_len_ > 0){
             while(buffer_.size() > max_len_){
-                ROSCANOPEN_ERROR("socketcan_interface", "buffer overflow, discarded oldest message " /*<< tostring(buffer_.front())*/); // enable message printing
+                LOG("buffer overflow, discarded oldest message " /*<< tostring(buffer_.front())*/); // enable message printing
                 buffer_.pop_front();
             }
         }
@@ -33,7 +33,7 @@ class BufferedReader {
             trim();
             cond_.notify_one();
         }else{
-            ROSCANOPEN_WARN("socketcan_interface", "discarded message " /*<< tostring(msg)*/); // enable message printing
+            LOG("discarded message " /*<< tostring(msg)*/); // enable message printing
         }
     }
 public:
@@ -79,12 +79,12 @@ public:
 
     void listen(CommInterfaceSharedPtr interface){
         boost::mutex::scoped_lock lock(mutex_);
-        listener_ = interface->createMsgListenerM(this, &BufferedReader::handleFrame);
+        listener_ = interface->createMsgListener(CommInterface::FrameDelegate(this, &BufferedReader::handleFrame));
         buffer_.clear();
     }
     void listen(CommInterfaceSharedPtr interface, const Frame::Header& h){
         boost::mutex::scoped_lock lock(mutex_);
-        listener_ = interface->createMsgListenerM(h, this, &BufferedReader::handleFrame);
+        listener_ = interface->createMsgListener(h, CommInterface::FrameDelegate(this, &BufferedReader::handleFrame));
         buffer_.clear();
     }
 
