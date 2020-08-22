@@ -1,29 +1,8 @@
 
 #include <canopen_motor_node/motor_chain.h>
 #include <canopen_motor_node/handle_layer.h>
-
+#include <socketcan_interface/xmlrpc_settings.h>
 using namespace canopen;
-
-
-class XmlRpcSettings : public Settings{
-public:
-    XmlRpcSettings() {}
-    XmlRpcSettings(const XmlRpc::XmlRpcValue &v) : value_(v) {}
-    XmlRpcSettings& operator=(const XmlRpc::XmlRpcValue &v) { value_ = v; return *this; }
-private:
-    virtual bool getRepr(const std::string &n, std::string & repr) const {
-        if(value_.hasMember(n)){
-            std::stringstream sstr;
-            sstr << const_cast< XmlRpc::XmlRpcValue &>(value_)[n]; // does not write since already existing
-            repr = sstr.str();
-            return true;
-        }
-        return false;
-    }
-    XmlRpc::XmlRpcValue value_;
-
-};
-
 
 MotorChain::MotorChain(const ros::NodeHandle &nh, const ros::NodeHandle &nh_priv) :
         RosChain(nh, nh_priv), motor_allocator_("canopen_402", "canopen::MotorBase::Allocator") {}
@@ -65,7 +44,7 @@ bool MotorChain::nodeAdded(XmlRpc::XmlRpcValue &params, const canopen::NodeShare
     motors_->add(motor);
     logger->add(motor);
 
-    boost::shared_ptr<HandleLayer> handle( new HandleLayer(joint, motor, node->getStorage(), params));
+    HandleLayerSharedPtr handle = std::make_shared<HandleLayer>(joint, motor, node->getStorage(), params);
 
     canopen::LayerStatus s;
     if(!handle->prepareFilters(s)){
@@ -103,4 +82,3 @@ bool MotorChain::setup_chain() {
 
     return false;
 }
-

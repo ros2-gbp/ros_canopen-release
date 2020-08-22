@@ -2,24 +2,44 @@
 Changelog for package canopen_master
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.13 (2020-08-22)
--------------------
-
-0.7.12 (2019-11-04)
--------------------
-* added support for SYNC counter in SimpleSyncLayer (`#349 <https://github.com/ipa-mdl/ros_canopen/issues/349>`_)
-* Contributors: Mathias Lüdtke
-
-0.7.11 (2019-07-14)
--------------------
-
-0.7.10 (2019-03-18)
--------------------
-* require minimum version of class_loader and pluginlib
-* Contributors: Mathias Lüdtke
-
-0.7.9 (2018-05-23)
+0.8.4 (2020-08-22)
 ------------------
+* added settings parameter to DriverInterface::init
+* moved canopen::Settings into can namespace
+* Contributors: Mathias Lüdtke
+
+0.8.3 (2020-05-07)
+------------------
+* Bump CMake version to avoid CMP0048 warning
+  Signed-off-by: ahcorde <ahcorde@gmail.com>
+* Contributors: ahcorde
+
+0.8.2 (2019-11-04)
+------------------
+* implemented LayerStatus::equals<>()
+* added support for SYNC counter in SimpleSyncLayer (`#349 <https://github.com/ipa-mdl/ros_canopen/issues/349>`_)
+* enable rosconsole_bridge bindings
+* switch to new logging macros
+* add logging based on console_bridge
+* removed implicit Header operator
+* Contributors: Mathias Lüdtke
+
+0.8.1 (2019-07-14)
+------------------
+* Set C++ standard to c++14
+* added Delegate helpers for backwards compatibility
+* implemented create\*ListenerM helpers
+* Replacing FastDelegate with std::function and std::bind.
+* Contributors: Harsh Deshpande, Joshua Whitley, Mathias Lüdtke
+
+0.8.0 (2018-07-11)
+------------------
+* migrated to std::function and std::bind
+* migrated to std::atomic
+* got rid of boost::noncopyable
+* replaced BOOST_FOREACH
+* migrated to std::unordered_map and std::unordered_set
+* migrated to std pointers
 * provided KeyHash
   for use with unordered containers
 * added c_array access functons to can::Frame

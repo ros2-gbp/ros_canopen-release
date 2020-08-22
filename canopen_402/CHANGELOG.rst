@@ -2,23 +2,37 @@
 Changelog for package canopen_402
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.7.13 (2020-08-22)
--------------------
+0.8.4 (2020-08-22)
+------------------
+* handle illegal states in nextStateForEnabling
+* tranistion -> transition
+* Contributors: Mathias Lüdtke, Mikael Arguedas
 
-0.7.12 (2019-11-04)
--------------------
+0.8.3 (2020-05-07)
+------------------
+* Bump CMake version to avoid CMP0048 warning
+  Signed-off-by: ahcorde <ahcorde@gmail.com>
+* Contributors: ahcorde
 
-0.7.11 (2019-07-14)
--------------------
-
-0.7.10 (2019-03-18)
--------------------
-* require minimum version of class_loader and pluginlib
-* handle invalid supported drive modes object
+0.8.2 (2019-11-04)
+------------------
+* enable rosconsole_bridge bindings
+* switch to new logging macros
 * Contributors: Mathias Lüdtke
 
-0.7.9 (2018-05-23)
+0.8.1 (2019-07-14)
 ------------------
+* Set C++ standard to c++14
+* Contributors: Harsh Deshpande
+
+0.8.0 (2018-07-11)
+------------------
+* handle invalid supported drive modes object
+* made Mode402::registerMode a variadic template
+* use std::isnan
+* migrated to std::atomic
+* migrated to std::unordered_map and std::unordered_set
+* migrated to std pointers
 * fix initialization bug in ProfiledPositionMode
 * Contributors: Mathias Lüdtke
 

@@ -13,8 +13,8 @@ protected:
 
     std::set<void *> nodes_;
     boost::mutex nodes_mutex_;
-    boost::atomic<size_t> nodes_size_;
-    
+    std::atomic<size_t> nodes_size_;
+
     virtual void handleShutdown(LayerStatus &status) {
     }
 
@@ -40,7 +40,7 @@ public:
     }
 };
 
-    
+
 class SimpleSyncLayer: public ManagingSyncLayer {
     time_point read_time_, write_time_;
     can::Frame frame_;
@@ -107,7 +107,7 @@ protected:
         // nothing to do here
     }
     virtual void handleInit(LayerStatus &status){
-        reader_.listen(interface_, can::MsgHeader(properties.header_));
+        reader_.listen(interface_, properties.header_);
     }
 public:
     ExternalSyncLayer(const SyncProperties &p, can::CommInterfaceSharedPtr interface)
@@ -119,14 +119,14 @@ template<typename SyncType> class WrapMaster: public Master{
     can::CommInterfaceSharedPtr interface_;
 public:
     virtual SyncLayerSharedPtr getSync(const SyncProperties &properties){
-        return boost::make_shared<SyncType>(properties, interface_);
+        return std::make_shared<SyncType>(properties, interface_);
     }
     WrapMaster(can::CommInterfaceSharedPtr interface) : interface_(interface)  {}
 
     class Allocator : public Master::Allocator{
     public:
         virtual MasterSharedPtr allocate(const std::string &name,  can::CommInterfaceSharedPtr interface){
-            return boost::make_shared<WrapMaster>(interface);
+            return std::make_shared<WrapMaster>(interface);
         }
     };
 };
@@ -136,4 +136,3 @@ typedef WrapMaster<ExternalSyncLayer> ExternalMaster;
 }
 CLASS_LOADER_REGISTER_CLASS(canopen::SimpleMaster::Allocator, canopen::Master::Allocator);
 CLASS_LOADER_REGISTER_CLASS(canopen::ExternalMaster::Allocator, canopen::Master::Allocator);
-

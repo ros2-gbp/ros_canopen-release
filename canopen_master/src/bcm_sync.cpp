@@ -1,5 +1,6 @@
 #include <canopen_master/bcm_sync.h>
 #include <socketcan_interface/string.h>
+#include <iostream>
 
 int main(int argc, char** argv){
 
@@ -42,8 +43,8 @@ int main(int argc, char** argv){
         }
     }
 
-    can::SocketCANDriverSharedPtr driver = boost::make_shared<can::SocketCANDriver>();
-    if(!driver->init(can_device, false)){
+    can::SocketCANDriverSharedPtr driver = std::make_shared<can::SocketCANDriver>();
+    if(!driver->init(can_device, false, can::NoSettings::create())){
         std::cout << "Could not initialize CAN" << std::endl;
         return 1;
     }
@@ -60,7 +61,7 @@ int main(int argc, char** argv){
         std::cout << "Could not initialize sync" << std::endl;
         return 1;
     }
-    
+
     driver->run();
 
     return 0;

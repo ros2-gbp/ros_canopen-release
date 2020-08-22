@@ -3,10 +3,8 @@
 
 #include <socketcan_interface/interface.h>
 #include <boost/thread/thread.hpp>
-#include <boost/bind.hpp>
 
 namespace can{
-
 
 class StateWaiter{
     boost::mutex mutex_;
@@ -22,7 +20,7 @@ class StateWaiter{
 public:
     template<typename InterfaceType> StateWaiter(InterfaceType *interface){
         state_ = interface->getState();
-        state_listener_ = interface->createStateListener(can::StateInterface::StateDelegate(this, &StateWaiter::updateState));
+        state_listener_ = interface->createStateListener(std::bind(&StateWaiter::updateState, this, std::placeholders::_1));
     }
     template<typename DurationType> bool wait(const can::State::DriverState &s, const DurationType &duration){
         boost::mutex::scoped_lock cond_lock(mutex_);
@@ -39,13 +37,24 @@ public:
 };
 
 template<typename WrappedInterface> class ThreadedInterface : public WrappedInterface{
-    boost::shared_ptr<boost::thread> thread_;
+    std::shared_ptr<boost::thread> thread_;
     void run_thread(){
         WrappedInterface::run();
     }
 public:
-    virtual bool init(const std::string &device, bool loopback) {
+    [[deprecated("provide settings explicitly")]] virtual bool init(const std::string &device, bool loopback) override {
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         if(!thread_ && WrappedInterface::init(device, loopback)){
+            StateWaiter waiter(this);
+            thread_.reset(new boost::thread(&ThreadedInterface::run_thread, this));
+            return waiter.wait(can::State::ready, boost::posix_time::seconds(1));
+        }
+        return WrappedInterface::getState().isReady();
+        #pragma GCC diagnostic pop
+    }
+    virtual bool init(const std::string &device, bool loopback, SettingsConstSharedPtr settings) override {
+        if(!thread_ && WrappedInterface::init(device, loopback, settings)){
             StateWaiter waiter(this);
             thread_.reset(new boost::thread(&ThreadedInterface::run_thread, this));
             return waiter.wait(can::State::ready, boost::posix_time::seconds(1));
@@ -69,7 +78,7 @@ public:
     ThreadedInterface(): WrappedInterface() {}
     template<typename T1> ThreadedInterface(const T1 &t1): WrappedInterface(t1) {}
     template<typename T1, typename T2> ThreadedInterface(const T1 &t1, const T2 &t2): WrappedInterface(t1, t2) {}
-    
+
 };
 
 
