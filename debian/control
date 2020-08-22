@@ -1,0 +1,12 @@
+Source: ros-noetic-ros-canopen
+Section: misc
+Priority: optional
+Maintainer: Mathias Lüdtke <mathias.luedtke@ipa.fraunhofer.de>
+Build-Depends: debhelper (>= 9.0.0), ros-noetic-catkin
+Homepage: http://ros.org/wiki/ros_canopen
+Standards-Version: 3.9.2
+
+Package: ros-noetic-ros-canopen
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-noetic-can-msgs, ros-noetic-canopen-402, ros-noetic-canopen-chain-node, ros-noetic-canopen-master, ros-noetic-canopen-motor-node, ros-noetic-socketcan-bridge, ros-noetic-socketcan-interface
+Description: A generic canopen implementation for ROS
