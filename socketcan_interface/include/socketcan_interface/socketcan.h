@@ -59,9 +59,13 @@ public:
         return fatal_error_mask_;
     }
     [[deprecated("provide settings explicitly")]] virtual bool init(const std::string &device, bool loopback) override {
-        return init(device, loopback, SettingsConstSharedPtr());
+        return init(device, loopback, NoSettings::create());
     }
     virtual bool init(const std::string &device, bool loopback, SettingsConstSharedPtr settings) override {
+      if (!settings) {
+          ROSCANOPEN_ERROR("socketcan_interface", "settings must not be a null pointer");
+          return false;
+      }
       const can_err_mask_t fatal_errors = ( CAN_ERR_TX_TIMEOUT   /* TX timeout (by netdevice driver) */
                                           | CAN_ERR_BUSOFF       /* bus off */
                                           | CAN_ERR_BUSERROR     /* bus error (may flood!) */
