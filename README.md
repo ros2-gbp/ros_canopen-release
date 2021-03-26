@@ -1,3 +1,26 @@
+## ros_canopen (rolling) - 2.0.0-2
+
+The packages in the `ros_canopen` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --track rolling --rosdistro rolling ros_canopen` on `Fri, 26 Mar 2021 14:32:55 -0000`
+
+The `can_msgs` package was released.
+
+Version of package(s) in repository `ros_canopen`:
+
+- upstream repository: https://github.com/ros-industrial/ros_canopen.git
+- release repository: https://github.com/ros-industrial-release/ros_canopen-release.git
+- rosdistro version: `2.0.0-1`
+- old version: `2.0.0-1`
+- new version: `2.0.0-2`
+
+Versions of tools used:
+
+- bloom version: `0.10.3`
+- catkin_pkg version: `0.4.23`
+- rosdep version: `0.20.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## ros_canopen (noetic) - 0.8.5-1
 
 The packages in the `ros_canopen` repository were released into the `noetic` distro by running `/usr/bin/bloom-release ros_canopen --rosdistro noetic` on `Tue, 22 Sep 2020 19:25:25 -0000`
